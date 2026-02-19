@@ -10,12 +10,12 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { SIDEBAR_WIDTH } from '../theme';
 import { capitalize } from '../utils';
-import type { SelectedSpot } from '../App';
+import { useAppContext } from '../context/AppContext';
+import type { SelectedSpot } from '../context/AppContext';
 
 interface Props {
-    selected:     SelectedSpot;
-    onClose:      () => void;
     sidebarWidth: number;
+    onClose:      () => void;
 }
 
 const SCORE_BARS: { key: keyof SelectedSpot['result']['scores']; label: string; max: number }[] = [
@@ -32,8 +32,11 @@ function ratingColor(rating: string): 'success' | 'warning' | 'error' | 'default
     return 'error';
 }
 
-export default function SpotDrawer({ selected, onClose, sidebarWidth }: Props) {
-    const { spot, result } = selected;
+export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
+    const { selectedSpot } = useAppContext();
+    if (!selectedSpot) return null;
+
+    const { spot, result } = selectedSpot;
 
     return (
         <Drawer

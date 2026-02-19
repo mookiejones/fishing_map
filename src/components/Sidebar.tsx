@@ -15,17 +15,8 @@ import WaterIcon from '@mui/icons-material/Water';
 import { SIDEBAR_WIDTH } from '../theme';
 import { WeatherAPI } from '../api';
 import { FishingEngine } from '../engine';
-import type { WeatherDay, TideEvent, DayConditions, SelectedSpecies } from '../types';
-
-interface Props {
-    weatherDays:    WeatherDay[];
-    tidesByDate:    Record<string, TideEvent[]>;
-    selectedDay:    number;
-    selectedSpecies: SelectedSpecies;
-    conditions:     DayConditions | null;
-    onSelectDay:    (i: number) => void;
-    onSelectSpecies: (s: SelectedSpecies) => void;
-}
+import { useAppContext } from '../context/AppContext';
+import type { SelectedSpecies } from '../types';
 
 const SPECIES_OPTIONS: { value: SelectedSpecies; label: string }[] = [
     { value: 'all',     label: 'All' },
@@ -43,10 +34,14 @@ function ratingChipColor(rating: string): 'success' | 'warning' | 'error' | 'def
     return 'error';
 }
 
-export default function Sidebar({
-    weatherDays, tidesByDate, selectedDay, selectedSpecies,
-    conditions, onSelectDay, onSelectSpecies,
-}: Props) {
+export default function Sidebar() {
+    const {
+        weatherDays, tidesByDate,
+        selectedDay, setSelectedDay,
+        selectedSpecies, setSelectedSpecies,
+        conditions,
+    } = useAppContext();
+
     return (
         <Box sx={{
             width: SIDEBAR_WIDTH,
@@ -66,7 +61,7 @@ export default function Sidebar({
                 <ToggleButtonGroup
                     value={selectedSpecies}
                     exclusive
-                    onChange={(_, v) => v && onSelectSpecies(v as SelectedSpecies)}
+                    onChange={(_, v) => v && setSelectedSpecies(v as SelectedSpecies)}
                     size="small"
                     fullWidth
                 >
@@ -97,8 +92,8 @@ export default function Sidebar({
                                     const d          = new Date(day.date + 'T12:00:00');
                                     const dayName    = i === 0 ? 'Today' : DAY_NAMES[d.getDay()]!;
                                     const tides      = tidesByDate[day.date] ?? [];
-                                    const conditions = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
-                                    const rating     = FishingEngine.getDailyRating(conditions);
+                                    const dayConds   = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
+                                    const rating     = FishingEngine.getDailyRating(dayConds);
                                     const wx         = WeatherAPI.weatherInfo(day.weatherCode);
                                     const isSelected = i === selectedDay;
 
@@ -108,7 +103,7 @@ export default function Sidebar({
                                             elevation={0}
                                             sx={{ outline: isSelected ? '2px solid' : 'none', outlineColor: 'primary.main' }}
                                         >
-                                            <CardActionArea onClick={() => onSelectDay(i)}>
+                                            <CardActionArea onClick={() => setSelectedDay(i)}>
                                                 <CardContent sx={{ p: '8px 12px !important' }}>
                                                     <Stack direction="row" alignItems="center" spacing={1}>
                                                         <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{wx.icon}</Typography>

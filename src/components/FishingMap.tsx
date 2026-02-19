@@ -6,59 +6,39 @@ import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, Stack } from '@mui/material';
 import { APIProvider, Map, Marker, useApiIsLoaded } from '@vis.gl/react-google-maps';
 import { CONFIG } from '../config';
-import type { FishingSpot, SpotResult } from '../types';
-import type { SelectedSpot } from '../App';
+import { useAppContext } from '../context/AppContext';
+import type { ScoredSpot } from '../context/AppContext';
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
-    { elementType: 'geometry',        stylers: [{ color: '#0a1628' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#7aaac8' }] },
+    { elementType: 'geometry',           stylers: [{ color: '#0a1628' }] },
+    { elementType: 'labels.text.fill',   stylers: [{ color: '#7aaac8' }] },
     { elementType: 'labels.text.stroke', stylers: [{ color: '#071220' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#071e33' }] },
-    { featureType: 'road',  elementType: 'geometry', stylers: [{ color: '#1a3550' }] },
-    { featureType: 'poi',   stylers: [{ visibility: 'off' }] },
+    { featureType: 'water',   elementType: 'geometry', stylers: [{ color: '#071e33' }] },
+    { featureType: 'road',    elementType: 'geometry', stylers: [{ color: '#1a3550' }] },
+    { featureType: 'poi',     stylers: [{ visibility: 'off' }] },
     { featureType: 'transit', stylers: [{ visibility: 'off' }] },
     { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
 ];
 
-interface ScoredSpot {
-    spot:   FishingSpot;
-    result: SpotResult;
-}
-
-interface Props {
-    apiKey:       string;
-    scoredSpots:  ScoredSpot[];
-    selectedSpot: SelectedSpot | null;
-    onSpotClick:  (s: SelectedSpot) => void;
-    onSaveKey:    (key: string) => void;
-    sidebarWidth: number;
-}
-
 const PLACEHOLDER_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
-export default function FishingMap({ apiKey, scoredSpots, selectedSpot, onSpotClick, onSaveKey, sidebarWidth }: Props) {
+export default function FishingMap() {
+    const { apiKey, saveApiKey } = useAppContext();
     const isPlaceholder = !apiKey || apiKey === PLACEHOLDER_KEY;
 
     if (isPlaceholder) {
-        return <SetupBanner onSave={onSaveKey} />;
+        return <SetupBanner onSave={saveApiKey} />;
     }
 
     return (
         <APIProvider apiKey={apiKey}>
-            <MapInner
-                scoredSpots={scoredSpots}
-                selectedSpot={selectedSpot}
-                onSpotClick={onSpotClick}
-            />
+            <MapInner />
         </APIProvider>
     );
 }
 
-function MapInner({ scoredSpots, selectedSpot, onSpotClick }: {
-    scoredSpots:  ScoredSpot[];
-    selectedSpot: SelectedSpot | null;
-    onSpotClick:  (s: SelectedSpot) => void;
-}) {
+function MapInner() {
+    const { scoredSpots, selectedSpot, setSelectedSpot } = useAppContext();
     const loaded = useApiIsLoaded();
 
     return (
@@ -70,15 +50,15 @@ function MapInner({ scoredSpots, selectedSpot, onSpotClick }: {
             disableDefaultUI={false}
             style={{ width: '100%', height: '100%' }}
         >
-            {loaded && scoredSpots.map(({ spot, result }) => {
+            {loaded && scoredSpots.map(({ spot, result }: ScoredSpot) => {
                 const isSelected = selectedSpot?.spot.id === spot.id;
                 const icon: google.maps.Symbol = {
-                    path:        google.maps.SymbolPath.CIRCLE,
-                    fillColor:   result.color,
-                    fillOpacity: 0.9,
-                    strokeColor: isSelected ? '#ffffff' : result.color,
+                    path:         google.maps.SymbolPath.CIRCLE,
+                    fillColor:    result.color,
+                    fillOpacity:  0.9,
+                    strokeColor:  isSelected ? '#ffffff' : result.color,
                     strokeWeight: isSelected ? 3 : 1.5,
-                    scale:       isSelected ? 14 : 11,
+                    scale:        isSelected ? 14 : 11,
                 };
 
                 return (
@@ -88,7 +68,7 @@ function MapInner({ scoredSpots, selectedSpot, onSpotClick }: {
                         title={`${spot.name} — ${result.rating} (${result.score})`}
                         icon={icon}
                         zIndex={isSelected ? 10 : result.score}
-                        onClick={() => onSpotClick({ spot, result })}
+                        onClick={() => setSelectedSpot({ spot, result })}
                     />
                 );
             })}

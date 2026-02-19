@@ -4,19 +4,17 @@
 
 import React from 'react';
 import { AppBar, Toolbar, Typography, Chip, Stack } from '@mui/material';
-import type { DataStatus } from '../App';
-
-interface Props {
-    dataStatus: DataStatus;
-}
+import { useAppContext } from '../context/AppContext';
+import type { DataStatus } from '../context/AppContext';
 
 const STATUS_CONFIG: Record<DataStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
-    loading: { label: 'Loading…',    color: 'warning' },
-    ok:      { label: 'Live data',   color: 'success' },
+    loading: { label: 'Loading…',     color: 'warning' },
+    ok:      { label: 'Live data',    color: 'success' },
     error:   { label: 'Offline data', color: 'error'   },
 };
 
-export default function TopBar({ dataStatus }: Props) {
+export default function TopBar() {
+    const { dataStatus } = useAppContext();
     const { label, color } = STATUS_CONFIG[dataStatus];
 
     return (
