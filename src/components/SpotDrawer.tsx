@@ -8,7 +8,6 @@ import {
     LinearProgress, Grid, List, ListItem, ListItemText, Divider,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { SIDEBAR_WIDTH } from '../theme';
 import { capitalize } from '../utils';
 import { useAppContext } from '../context/AppContext';
 import type { SelectedSpot } from '../context/AppContext';
@@ -25,6 +24,13 @@ const SCORE_BARS: { key: keyof SelectedSpot['result']['scores']; label: string; 
     { key: 'temperature', label: 'Temperature', max: 20 },
 ];
 
+// Species marker legend colors to match the map
+const SPECIES_COLOR: Record<string, string> = {
+    tarpon:  '#FFD700',
+    snook:   '#00b4d8',
+    redfish: '#FF6B35',
+};
+
 function ratingColor(rating: string): 'success' | 'warning' | 'error' | 'default' {
     if (rating === 'excellent') return 'success';
     if (rating === 'good')      return 'warning';
@@ -36,7 +42,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
     const { selectedSpot } = useAppContext();
     if (!selectedSpot) return null;
 
-    const { spot, result } = selectedSpot;
+    const { spot, result, species } = selectedSpot;
 
     return (
         <Drawer
@@ -53,6 +59,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                     border:       '1px solid',
                     borderColor:  'divider',
                     borderBottom: 'none',
+                    transition:   'left 0.25s ease',
                 },
             }}
         >
@@ -60,8 +67,19 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                 {/* Header */}
                 <Stack direction="row" alignItems="flex-start" spacing={1} sx={{ mb: 1.5 }}>
                     <Box sx={{ flex: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.5 }}>
                             <Typography variant="h6" sx={{ fontWeight: 700 }}>{spot.name}</Typography>
+                            {/* Species badge — color matches map marker */}
+                            <Chip
+                                label={capitalize(species)}
+                                size="small"
+                                sx={{
+                                    bgcolor:    SPECIES_COLOR[species] + '33',
+                                    color:      SPECIES_COLOR[species],
+                                    border:     `1px solid ${SPECIES_COLOR[species]}`,
+                                    fontWeight: 600,
+                                }}
+                            />
                             <Chip
                                 label={`${result.rating.toUpperCase()} · ${result.score}/100`}
                                 color={ratingColor(result.rating)}
@@ -113,16 +131,22 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                         </Typography>
                     </Grid>
 
-                    {/* Species + tips */}
+                    {/* All species at this spot + features + tips */}
                     <Grid item xs={12} sm={7}>
                         <Stack spacing={2}>
                             <Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75 }}>
-                                    TARGET SPECIES
+                                    ALL SPECIES AT THIS SPOT
                                 </Typography>
                                 <Stack direction="row" spacing={0.75} flexWrap="wrap">
                                     {spot.species.map(s => (
-                                        <Chip key={s} label={capitalize(s)} size="small" color="primary" variant="outlined" />
+                                        <Chip
+                                            key={s}
+                                            label={capitalize(s)}
+                                            size="small"
+                                            variant={s === species ? 'filled' : 'outlined'}
+                                            color="primary"
+                                        />
                                     ))}
                                     {spot.features.map(f => (
                                         <Chip key={f} label={f} size="small" variant="outlined" sx={{ borderColor: 'divider', color: 'text.secondary' }} />
