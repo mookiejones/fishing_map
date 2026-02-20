@@ -3,7 +3,7 @@ import { FISHING_SPOTS } from '../src/spots';
 
 const BREVARD_LAT    = { min: 27.8, max: 28.97 };
 const BREVARD_LNG    = { min: -81.0, max: -80.4 };
-const VALID_SPECIES  = ['tarpon', 'snook', 'redfish'] as const;
+const VALID_SPECIES  = ['tarpon', 'snook', 'redfish', 'black drum', 'speckled trout'] as const;
 const VALID_TIDE_PREFS = ['incoming', 'outgoing'] as const;
 
 describe('FISHING_SPOTS', () => {

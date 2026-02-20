@@ -19,17 +19,22 @@ interface Props {
 
 /** Ordered score categories rendered as labelled LinearProgress bars. */
 const SCORE_BARS: { key: keyof SelectedSpot['result']['scores']; label: string; max: number }[] = [
-    { key: 'wind',        label: 'Wind',        max: 25 },
-    { key: 'pressure',    label: 'Pressure',    max: 25 },
-    { key: 'tides',       label: 'Tides',       max: 30 },
-    { key: 'temperature', label: 'Temperature', max: 20 },
+    { key: 'wind',          label: 'Wind Speed',      max: 25 },
+    { key: 'windDirection', label: 'Wind Direction',  max: 10 },
+    { key: 'pressure',      label: 'Pressure',        max: 25 },
+    { key: 'coldFront',     label: 'Cold Front',      max: 10 },
+    { key: 'tides',         label: 'Water Movement',  max: 20 },
+    { key: 'temperature',   label: 'Temperature',     max: 20 },
+    { key: 'precipitation', label: 'Precipitation',   max:  5 },
 ];
 
 // Species marker legend colors to match the map
 const SPECIES_COLOR: Record<string, string> = {
-    tarpon:  '#FFD700',
-    snook:   '#00b4d8',
-    redfish: '#FF6B35',
+    tarpon:           '#FFD700',
+    snook:            '#00b4d8',
+    redfish:          '#FF6B35',
+    'black drum':     '#78909C',
+    'speckled trout': '#AB47BC',
 };
 
 /**

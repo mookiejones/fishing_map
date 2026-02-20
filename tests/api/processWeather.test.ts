@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WeatherAPI } from '../../src/api';
+import { WeatherAPI } from '../../src/api/api';
 import { makeWeatherResponse, pressures } from './helpers';
 
 describe('processWeather', () => {

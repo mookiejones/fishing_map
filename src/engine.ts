@@ -1,11 +1,14 @@
 // ============================================================
 // engine.ts — Fishing condition scoring engine
 // ============================================================
-// Scoring breakdown (100 pts total):
-//   Wind speed    0–25 pts  (lower wind = better sight fishing & calmer water)
-//   Barometric    0–25 pts  (rising high pressure = actively feeding fish)
-//   Tides         0–30 pts  (preferred tide type + prime dawn/dusk alignment)
-//   Temperature   0–20 pts  (species-specific thermal comfort range)
+// Scoring breakdown (115 pts max, capped at 100):
+//   Wind speed      0–25 pts  (lower wind = better sight fishing & calmer water)
+//   Barometric      0–25 pts  (rising high pressure = actively feeding fish)
+//   Water movement  0–20 pts  (IRL is wind-driven, not tidal — env. shift scoring)
+//   Temperature     0–20 pts  (species-specific thermal comfort range)
+//   Wind direction  0–10 pts  (SE/E winds push water onto flats)
+//   Cold front      0–10 pts  (falling pressure + northerly wind shuts down feeding)
+//   Precipitation   0– 5 pts  (heavy rain = reduced water clarity)
 // ============================================================
 
 import type {
@@ -48,13 +51,17 @@ export const FishingEngine = {
             selectedSpecies !== 'all' ? selectedSpecies : spot.species[0]!;
 
         const scores: SpotScores = {
-            wind:        this.scoreWind(conditions.windSpeed),
-            pressure:    this.scorePressure(conditions.pressure, conditions.pressureTrend),
-            tides:       this.scoreTides(conditions.tides, spot),
-            temperature: this.scoreTemperature(conditions.tempMax, primarySpecies),
+            wind:          this.scoreWind(conditions.windSpeed),
+            pressure:      this.scorePressure(conditions.pressure, conditions.pressureTrend),
+            tides:         this.scoreWaterMovement(conditions.tides, conditions),
+            temperature:   this.scoreTemperature(conditions.tempMax, primarySpecies),
+            windDirection: this.scoreWindDirection(conditions.windDir),
+            coldFront:     this.scoreColdFront(conditions.pressureTrend, conditions.windDir),
+            precipitation: this.scorePrecipitation(conditions.precipitation),
         };
 
-        const total  = scores.wind + scores.pressure + scores.tides + scores.temperature;
+        const total  = scores.wind + scores.pressure + scores.tides + scores.temperature
+                     + scores.windDirection + scores.coldFront + scores.precipitation;
         const rating = this.getRating(total);
 
         return {
@@ -184,9 +191,11 @@ export const FishingEngine = {
         const waterTempF = airTempF - 3;
 
         const ranges: Record<Species, { min: number; optimal: number; max: number }> = {
-            tarpon:  { min: 70, optimal: 82, max: 94 },
-            snook:   { min: 58, optimal: 75, max: 90 },
-            redfish: { min: 48, optimal: 70, max: 88 },
+            tarpon:          { min: 70, optimal: 82, max: 94 },
+            snook:           { min: 58, optimal: 75, max: 90 },
+            redfish:         { min: 48, optimal: 70, max: 88 },
+            'black drum':    { min: 45, optimal: 68, max: 85 },
+            'speckled trout':{ min: 45, optimal: 68, max: 82 },
         };
 
         const r = ranges[species];
@@ -203,21 +212,115 @@ export const FishingEngine = {
     },
 
     /**
+     * Scores wind direction on a 0–10 point scale for Indian River Lagoon fishing.
+     *
+     * The IRL is a wind-driven system. SE/E winds push water onto the western grass
+     * flats, improving depth and visibility. N/NW winds blow water off the flats,
+     * drop water levels, and commonly accompany cold fronts.
+     *
+     * @param windDir - Dominant wind direction in meteorological degrees (0–360, 0/360 = N).
+     * @returns Wind direction sub-score (0–10).
+     */
+    scoreWindDirection(windDir: number): number {
+        if (windDir >= 90  && windDir <= 160) return 10;  // E to SE — ideal for IRL flats
+        if (windDir >= 60  && windDir <= 200) return 7;   // NE to S — generally good
+        if (windDir >= 200 && windDir <= 250) return 4;   // SSW to WSW — neutral
+        if (windDir >= 250 && windDir <= 290) return 2;   // W to WNW — unfavorable
+        return 0;  // NW through N to NNE (>290 or <60) — worst; cold-front direction
+    },
+
+    /**
+     * Scores cold-front risk on a 0–10 point scale.
+     *
+     * Active cold fronts are the single biggest fishing killer in Florida inshore
+     * waters. Falling pressure combined with northerly winds signals an approaching
+     * or active front. Post-front high pressure + northerly winds means water has
+     * cooled and fish are lethargic.
+     *
+     * @param trend   - Barometric pressure trend for the day.
+     * @param windDir - Dominant wind direction in degrees.
+     * @returns Cold front sub-score (0–10). Higher = no front present.
+     */
+    scoreColdFront(trend: PressureTrend, windDir: number): number {
+        const isNortherly = windDir > 290 || windDir < 60;  // NW through N to NNE
+        if (trend === 'falling' && isNortherly) return 0;   // Active front — worst
+        if (trend === 'rising'  && isNortherly) return 4;   // Post-front recovery
+        if (trend === 'falling' && !isNortherly) return 6;  // Pre-front push — brief bite
+        return 10;  // Stable/rising + non-northerly — normal or improving conditions
+    },
+
+    /**
+     * Scores precipitation on a 0–5 point scale.
+     *
+     * Heavy rainfall washes tannins and sediment into the lagoon, reducing water
+     * clarity and suppressing sight-fishing and surface feeding.
+     *
+     * @param precipIn - Total daily precipitation in inches.
+     * @returns Precipitation sub-score (0–5).
+     */
+    scorePrecipitation(precipIn: number): number {
+        if (precipIn < 0.10) return 5;   // No rain — ideal clarity
+        if (precipIn < 0.25) return 3;   // Light rain — manageable
+        if (precipIn < 0.50) return 1;   // Moderate — murky water
+        return 0;                         // Heavy rain — poor visibility
+    },
+
+    /**
+     * Scores water movement on a 0–20 point scale for the Indian River Lagoon.
+     *
+     * The IRL is a microtidal estuary (tidal range < 1 ft); water movement is
+     * primarily driven by wind and barometric pressure changes rather than lunar
+     * tides. This method uses NOAA hi-lo data only as a minor supplement while
+     * weighting wind-driven and pressure-driven movement more heavily.
+     *
+     * Scoring components:
+     * - **Tidal activity** (0–4): number of NOAA tide events as a proxy for minor
+     *   water flushing through inlet connections.
+     * - **Pressure activity** (0–8): any pressure change (rising or falling) stirs
+     *   the water column and triggers feeding — stable pressure means stagnant water.
+     * - **Wind movement** (0–8): moderate wind (5–18 mph) drives productive currents;
+     *   too calm = stagnant, too strong = turbid and unfishable.
+     *
+     * @param tides      - NOAA hi-lo tide schedule (used as minor supplement only).
+     * @param conditions - Full day conditions including wind and pressure trend.
+     * @returns Water movement sub-score (0–20).
+     */
+    scoreWaterMovement(tides: TideEvent[], conditions: DayConditions): number {
+        // Minor tidal supplement — IRL inlets do exchange some water with the ocean
+        const tidalActivity = Math.min(4, tides.length);
+
+        // Any pressure change (rise or fall) drives water level change and fish movement
+        const pressureActivity = conditions.pressureTrend !== 'stable' ? 8 : 2;
+
+        // Wind speed drives surface currents; moderate = best, calm or gale = poor
+        const { windSpeed } = conditions;
+        const windMovement = windSpeed >= 5 && windSpeed <= 18 ? 8
+            : windSpeed < 5  ? 4   // too calm — water stagnates
+            : 2;                   // too strong — turbidity, angler difficulty
+
+        return Math.min(20, tidalActivity + pressureActivity + windMovement);
+    },
+
+    /**
      * Produces a single aggregate `Rating` for a day card in the sidebar.
      *
      * Uses a simplified temperature proxy (distance from a 78 °F target)
      * rather than per-species scoring, since no species is selected at this level.
+     * Incorporates cold front and wind direction for a more accurate daily overview.
      *
      * @param conditions - Weather and tide conditions for the day.
      * @returns A `Rating` string ('excellent' | 'good' | 'fair' | 'poor').
      */
     getDailyRating(conditions: DayConditions): Rating {
-        const wind     = this.scoreWind(conditions.windSpeed);
-        const pressure = this.scorePressure(conditions.pressure, conditions.pressureTrend);
-        const temp     = Math.max(5, 15 - Math.abs(conditions.tempMax - 78) * 0.4);
-        const tides    = conditions.tides.length > 0 ? 14 : 12;
+        const wind      = this.scoreWind(conditions.windSpeed);
+        const pressure  = this.scorePressure(conditions.pressure, conditions.pressureTrend);
+        const temp      = Math.max(5, 15 - Math.abs(conditions.tempMax - 78) * 0.4);
+        const water     = this.scoreWaterMovement(conditions.tides, conditions);
+        const windDir   = this.scoreWindDirection(conditions.windDir);
+        const coldFront = this.scoreColdFront(conditions.pressureTrend, conditions.windDir);
+        const precip    = this.scorePrecipitation(conditions.precipitation);
 
-        return this.getRating(wind + pressure + temp + tides);
+        return this.getRating(wind + pressure + temp + water + windDir + coldFront + precip);
     },
 
     /**

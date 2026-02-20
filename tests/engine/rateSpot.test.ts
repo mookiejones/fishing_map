@@ -30,6 +30,9 @@ describe('FishingEngine.rateSpot', () => {
         expect(result?.scores).toHaveProperty('pressure');
         expect(result?.scores).toHaveProperty('tides');
         expect(result?.scores).toHaveProperty('temperature');
+        expect(result?.scores).toHaveProperty('windDirection');
+        expect(result?.scores).toHaveProperty('coldFront');
+        expect(result?.scores).toHaveProperty('precipitation');
     });
 
     it('score is always capped at 100', () => {
@@ -46,8 +49,9 @@ describe('FishingEngine.rateSpot', () => {
 
     it('score sum of sub-scores matches total (before cap)', () => {
         const result = FishingEngine.rateSpot(incomingSpot, baseConditions, 'snook')!;
-        const { wind, pressure, tides, temperature } = result.scores;
-        expect(result.score).toBeLessThanOrEqual(wind + pressure + tides + temperature);
+        const { wind, pressure, tides, temperature, windDirection, coldFront, precipitation } = result.scores;
+        const subTotal = wind + pressure + tides + temperature + windDirection + coldFront + precipitation;
+        expect(result.score).toBeLessThanOrEqual(subTotal);
     });
 
     it('rating corresponds to score', () => {

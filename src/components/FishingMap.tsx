@@ -1,6 +1,6 @@
 // ============================================================
 // FishingMap.tsx — Google Map with scored hotspot markers,
-//   user location, and habitat overlays (oyster / seagrass)
+//   user location, habitat overlays, and structural barriers
 // ============================================================
 
 import { APIProvider, Map, Marker, useApiIsLoaded } from '@vis.gl/react-google-maps';
@@ -11,6 +11,7 @@ import type { ScoredSpot } from '../context/AppContext';
 import type { Species } from '../types';
 import SetupBanner from './SetupBannerComponent';
 import HabitatOverlaysComponent from './HabitatOverlaysComponent';
+import StructuralBarriersComponent from './StructuralBarriersComponent';
 import MAP_STYLES from './mapStyles';
 import { CONFIG } from '../config';
 
@@ -18,9 +19,11 @@ const PLACEHOLDER_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 /** Body fill color per species — differentiates fish icons on the map. */
 const SPECIES_COLOR: Record<Species, string> = {
-    tarpon:  '#FFD700',   // gold
-    snook:   '#00b4d8',   // teal
-    redfish: '#FF6B35',   // orange
+    tarpon:           '#FFD700',   // gold
+    snook:            '#00b4d8',   // teal
+    redfish:          '#FF6B35',   // orange
+    'black drum':     '#78909C',   // blue-grey
+    'speckled trout': '#AB47BC',   // purple
 };
 
 /**
@@ -73,7 +76,7 @@ export default function FishingMap() {
 export function MapInner() {
     const {
         scoredSpots, selectedSpot, setSelectedSpot,
-        userLocation, showOysterBeds, showSeagrass, showBoatRamps,
+        userLocation, showOysterBeds, showSeagrass, showBoatRamps, showStructuralBarriers,
     } = useAppContext();
 
     const loaded = useApiIsLoaded();
@@ -104,6 +107,8 @@ export function MapInner() {
                         fillColor="#00c853"
                         fillOpacity={0.15}
                     />
+                    {/* Structural barriers — causeways, bridges, canals, jetties */}
+                    <StructuralBarriersComponent visible={showStructuralBarriers} />
 
                     {/* Fishing spot markers — one per (spot × species) */}
                     {scoredSpots.map((s: ScoredSpot) => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WeatherAPI } from '../../src/api';
+import { WeatherAPI } from '../../src/api/api';
 
 describe('degToCompass', () => {
     it('returns N for 0°',           () => expect(WeatherAPI.degToCompass(0)).toBe('N'));

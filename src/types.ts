@@ -2,8 +2,8 @@
 // types.ts — Shared type definitions (ES module)
 // ============================================================
 
-/** One of the three target species supported by this app. */
-export type Species         = 'tarpon' | 'snook' | 'redfish';
+/** One of the target species supported by this app. */
+export type Species         = 'tarpon' | 'snook' | 'redfish' | 'black drum' | 'speckled trout';
 
 /** Species filter value — a specific species or 'all' to show every species. */
 export type SelectedSpecies = Species | 'all';
@@ -101,14 +101,27 @@ export interface FishingSpot {
 
 /** Individual sub-scores from `FishingEngine.rateSpot()`, each with a known maximum. */
 export interface SpotScores {
-    /** Wind score (0–25). Lower wind → higher score. */
-    wind:        number;
+    /** Wind speed score (0–25). Lower wind → higher score. */
+    wind:          number;
     /** Barometric pressure score (0–25). Rising high pressure → higher score. */
-    pressure:    number;
-    /** Tides score (0–30). Preferred tide type + prime dawn/dusk window → higher score. */
-    tides:       number;
+    pressure:      number;
+    /**
+     * Water movement score (0–20).
+     * Reflects environmental shifts (wind-driven currents, pressure-induced water level
+     * changes) rather than traditional lunar tides — the IRL is a microtidal system.
+     */
+    tides:         number;
     /** Temperature score (0–20). Species-specific thermal comfort range. */
-    temperature: number;
+    temperature:   number;
+    /** Wind direction score (0–10). SE/E winds push water onto IRL flats (favorable). */
+    windDirection: number;
+    /**
+     * Cold front score (0–10). 10 = no front present.
+     * Penalises falling-pressure + northerly-wind conditions that shut down IRL feeding.
+     */
+    coldFront:     number;
+    /** Precipitation score (0–5). Heavy rain reduces water clarity and feeding activity. */
+    precipitation: number;
 }
 
 /** The complete result of scoring a single spot for one day and one target species. */

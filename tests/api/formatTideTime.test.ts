@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WeatherAPI } from '../../src/api';
+import { WeatherAPI } from '../../src/api/api';
 
 describe('formatTideTime', () => {
     it('formats a morning time correctly', () => {

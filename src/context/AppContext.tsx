@@ -39,9 +39,11 @@ export interface ScoredSpot {
 
 // Slight position offsets so per-species markers don't stack exactly
 const SPECIES_OFFSET: Record<Species, { lat: number; lng: number }> = {
-    tarpon:  { lat:  0.004, lng:  0.000 },
-    snook:   { lat: -0.002, lng:  0.003 },
-    redfish: { lat: -0.002, lng: -0.003 },
+    tarpon:           { lat:  0.004, lng:  0.000 },
+    snook:            { lat: -0.002, lng:  0.003 },
+    redfish:          { lat: -0.002, lng: -0.003 },
+    'black drum':     { lat:  0.002, lng:  0.006 },
+    'speckled trout': { lat:  0.002, lng: -0.006 },
 };
 
 /** Shape of the global context value consumed by all child components. */
@@ -68,12 +70,14 @@ interface AppContextValue {
     scoredSpots: ScoredSpot[];
 
     // Map overlays
-    showOysterBeds:    boolean;
-    setShowOysterBeds: (v: boolean) => void;
-    showSeagrass:      boolean;
-    setShowSeagrass:   (v: boolean) => void;
-    showBoatRamps:     boolean;
-    setShowBoatRamps:  (v: boolean) => void;
+    showOysterBeds:         boolean;
+    setShowOysterBeds:      (v: boolean) => void;
+    showSeagrass:           boolean;
+    setShowSeagrass:        (v: boolean) => void;
+    showBoatRamps:          boolean;
+    setShowBoatRamps:       (v: boolean) => void;
+    showStructuralBarriers: boolean;
+    setShowStructuralBarriers: (v: boolean) => void;
 
     // User location (from browser Geolocation API)
     userLocation: { lat: number; lng: number } | null;
@@ -112,10 +116,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [selectedSpecies, setSelectedSpecies] = useState<SelectedSpecies>('all');
     const [selectedSpot, setSelectedSpot]       = useState<SelectedSpot | null>(null);
     const [dataStatus, setDataStatus]           = useState<DataStatus>('loading');
-    const [showOysterBeds, setShowOysterBeds]   = useState<boolean>(false);
-    const [showSeagrass, setShowSeagrass]       = useState<boolean>(false);
-    const [showBoatRamps, setShowBoatRamps]     = useState<boolean>(false);
-    const [userLocation, setUserLocation]       = useState<{ lat: number; lng: number } | null>(null);
+    const [showOysterBeds, setShowOysterBeds]               = useState<boolean>(false);
+    const [showSeagrass, setShowSeagrass]                   = useState<boolean>(false);
+    const [showBoatRamps, setShowBoatRamps]                 = useState<boolean>(false);
+    const [showStructuralBarriers, setShowStructuralBarriers] = useState<boolean>(false);
+    const [userLocation, setUserLocation]                   = useState<{ lat: number; lng: number } | null>(null);
     const [sidebarOpen, setSidebarOpen]         = useState<boolean>(true);
 
     // Fetch weather + tides on mount
@@ -179,9 +184,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         selectedSpecies, setSelectedSpecies,
         selectedSpot, setSelectedSpot,
         conditions, scoredSpots,
-        showOysterBeds, setShowOysterBeds,
-        showSeagrass,   setShowSeagrass,
-        showBoatRamps,  setShowBoatRamps,
+        showOysterBeds,          setShowOysterBeds,
+        showSeagrass,            setShowSeagrass,
+        showBoatRamps,           setShowBoatRamps,
+        showStructuralBarriers,  setShowStructuralBarriers,
         userLocation,
         sidebarOpen, setSidebarOpen,
     };

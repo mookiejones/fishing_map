@@ -25,10 +25,12 @@ import { useAppContext } from '../context/AppContext';
 import type { SelectedSpecies } from '../types';
 
 const SPECIES_OPTIONS: { value: SelectedSpecies; label: string }[] = [
-    { value: 'all',     label: 'All' },
-    { value: 'tarpon',  label: 'Tarpon' },
-    { value: 'snook',   label: 'Snook' },
-    { value: 'redfish', label: 'Redfish' },
+    { value: 'all',             label: 'All' },
+    { value: 'tarpon',          label: 'Tarpon' },
+    { value: 'snook',           label: 'Snook' },
+    { value: 'redfish',         label: 'Redfish' },
+    { value: 'black drum',      label: 'Drum' },
+    { value: 'speckled trout',  label: 'Trout' },
 ];
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -61,6 +63,7 @@ export default function Sidebar() {
         showOysterBeds, setShowOysterBeds,
         showSeagrass,   setShowSeagrass,
         showBoatRamps,  setShowBoatRamps,
+        showStructuralBarriers, setShowStructuralBarriers,
         sidebarOpen,    setSidebarOpen,
     } = useAppContext();
 
@@ -156,6 +159,18 @@ export default function Sidebar() {
                                 />
                             }
                             label={<Typography variant="caption">⚓ Boat Ramps</Typography>}
+                            sx={{ m: 0 }}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    size="small"
+                                    checked={showStructuralBarriers}
+                                    onChange={(_, v) => setShowStructuralBarriers(v)}
+                                    sx={{ '& .MuiSwitch-thumb': { bgcolor: '#FFB300' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#FFB300 !important' } }}
+                                />
+                            }
+                            label={<Typography variant="caption">🌉 Structures</Typography>}
                             sx={{ m: 0 }}
                         />
                     </Stack>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { WeatherAPI } from '../../src/api';
+import { WeatherAPI } from '../../src/api/api';
 import { CONFIG } from '../../src/config';
 import { makeWeatherResponse } from './helpers';
 
