@@ -16,14 +16,18 @@ import type { AppConfig } from './types';
 /**
  * Global application configuration.
  *
- * The Google Maps API key is read from `localStorage` (`fishing_map_gkey`)
- * on startup so the user can supply it through the in-app setup banner without
- * modifying source code. All other values are static constants targeting
- * Brevard County, Florida.
+ * The Google Maps API key is resolved in priority order:
+ *   1. `localStorage` key `fishing_map_gkey` (set by the in-app setup banner)
+ *   2. `VITE_GOOGLE_MAPS_API_KEY` environment variable (from `.env`)
+ *   3. Placeholder string `'YOUR_GOOGLE_MAPS_API_KEY'` → triggers the setup banner
+ *
+ * All other values are static constants targeting Brevard County, Florida.
  */
 export const CONFIG: AppConfig = {
-    // Replace this value — or enter the key in the on-screen setup panel
-    GOOGLE_MAPS_API_KEY: localStorage.getItem('fishing_map_gkey') ?? 'AIzaSyBiZMDmP5rBNL8P00G7YuHYLBDOzY5ohn8',
+    GOOGLE_MAPS_API_KEY:
+        localStorage.getItem('fishing_map_gkey') ??
+        import.meta.env.VITE_GOOGLE_MAPS_API_KEY ??
+        'YOUR_GOOGLE_MAPS_API_KEY',
 
     // Map initial view — centered on Brevard County, FL
     MAP_CENTER: { lat: 28.37, lng: -80.72 },
