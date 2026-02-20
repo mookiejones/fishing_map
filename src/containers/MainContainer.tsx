@@ -6,6 +6,11 @@ import Sidebar from "../components/Sidebar";
 import FishingMap from "../components/FishingMap";
 import SpotDrawer from "../components/SpotDrawer";
 import { SIDEBAR_WIDTH } from "../theme";
+/**
+ * Root layout container.
+ * Composes `<TopBar>`, `<Sidebar>`, the map area (via `<FishingMap>`), and `<SpotDrawer>`.
+ * Controls the sidebar collapse/expand toggle and the sidebar-aware left offset of `<SpotDrawer>`.
+ */
 function MainContainer() {
     const { selectedSpot, setSelectedSpot, sidebarOpen, setSidebarOpen } = useAppContext();
 

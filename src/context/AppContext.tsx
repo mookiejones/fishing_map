@@ -15,19 +15,25 @@ import type {
 
 // ── Types ────────────────────────────────────────────────────
 
+/** Remote data fetch state for weather and tide data. */
 export type DataStatus = 'loading' | 'ok' | 'error';
 
+/** A fishing spot that the user has clicked on the map, paired with its computed result. */
 export interface SelectedSpot {
     spot:    FishingSpot;
     result:  SpotResult;
+    /** The specific species that was scored for this selection. */
     species: Species;
 }
 
+/** A scored spot ready to render as a map marker, with a (possibly offset) lat/lng position. */
 export interface ScoredSpot {
     spot:    FishingSpot;
     result:  SpotResult;
     species: Species;
+    /** Latitude of the marker — may be slightly offset from `spot.lat` when multiple species share a spot. */
     lat:     number;
+    /** Longitude of the marker — may be slightly offset from `spot.lng` when multiple species share a spot. */
     lng:     number;
 }
 
@@ -38,6 +44,7 @@ const SPECIES_OFFSET: Record<Species, { lat: number; lng: number }> = {
     redfish: { lat: -0.002, lng: -0.003 },
 };
 
+/** Shape of the global context value consumed by all child components. */
 interface AppContextValue {
     // API key
     apiKey:     string;
@@ -78,6 +85,10 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+/**
+ * Returns the global app context.
+ * @throws If called outside of an `<AppProvider>` subtree.
+ */
 export function useAppContext(): AppContextValue {
     const ctx = useContext(AppContext);
     if (!ctx) throw new Error('useAppContext must be used inside <AppProvider>');
@@ -86,6 +97,11 @@ export function useAppContext(): AppContextValue {
 
 // ── Provider ─────────────────────────────────────────────────
 
+/**
+ * Top-level context provider.
+ * Owns all application state: API key, weather/tide data, selections, and map overlay toggles.
+ * Fetches weather and tide data via `WeatherAPI.fetchAll()` on mount and requests browser geolocation.
+ */
 export function AppProvider({ children }: { children: React.ReactNode }) {
     const [apiKey, setApiKey]                   = useState<string>(CONFIG.GOOGLE_MAPS_API_KEY);
     const [weatherDays, setWeatherDays]         = useState<WeatherDay[]>([]);

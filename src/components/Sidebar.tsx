@@ -31,6 +31,10 @@ const SPECIES_OPTIONS: { value: SelectedSpecies; label: string }[] = [
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/**
+ * Maps a fishing rating string to a MUI chip color.
+ * @param rating - One of 'excellent', 'good', 'fair', or 'poor'.
+ */
 function ratingChipColor(rating: string): 'success' | 'warning' | 'error' | 'default' {
     if (rating === 'excellent') return 'success';
     if (rating === 'good')      return 'warning';
@@ -38,6 +42,14 @@ function ratingChipColor(rating: string): 'success' | 'warning' | 'error' | 'def
     return 'error';
 }
 
+/**
+ * Collapsible left sidebar containing:
+ * - Species filter toggle buttons
+ * - Map overlay (oyster beds / seagrass) switches
+ * - 7-day forecast day cards
+ * - Current day conditions (wind, temp, pressure, precip)
+ * - Tide schedule for Port Canaveral
+ */
 export default function Sidebar() {
     const {
         weatherDays, tidesByDate,
@@ -250,6 +262,12 @@ export default function Sidebar() {
     );
 }
 
+/**
+ * Single icon + label + value row in the CONDITIONS section.
+ * @param icon     - MUI icon element shown on the left.
+ * @param label    - Short descriptor (e.g. "Wind", "Temp").
+ * @param children - Formatted value string rendered on the right.
+ */
 function CondRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
     return (
         <Stack direction="row" spacing={0.75} alignItems="center">

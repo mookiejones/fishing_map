@@ -1,3 +1,7 @@
+/**
+ * Dark nautical Google Maps style applied via the legacy `styles` prop on `<Map>`.
+ * Suppresses POI, transit, and land parcel labels; uses deep navy and teal tones.
+ */
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
     { elementType: 'geometry',           stylers: [{ color: '#0a1628' }] },
     { elementType: 'labels.text.fill',   stylers: [{ color: '#7aaac8' }] },

@@ -12,9 +12,25 @@ import type {
 } from './types';
 import { CONFIG } from './config';
 
+/**
+ * Facade over the Open-Meteo weather API and the NOAA CO-OPS tide API.
+ *
+ * All methods are designed for easy unit-testing: the processing methods
+ * (`processWeather`, `processTides`) accept plain data objects and have no
+ * network dependencies, while the fetch methods can be mocked via
+ * `vi.stubGlobal('fetch', ...)`.
+ */
 export const WeatherAPI = {
 
-    // ── Fetch all data concurrently ────────────────────────────────
+    /**
+     * Fetches weather and tide data concurrently and returns both.
+     *
+     * If either request fails the error is caught and fallback data is returned
+     * alongside the error message so the UI can display a meaningful status chip.
+     *
+     * @returns A `FetchResult` with weather days, tides keyed by date, and an
+     *          optional error message (null on success).
+     */
     async fetchAll(): Promise<FetchResult> {
         try {
             const [weather, tides] = await Promise.all([
@@ -33,7 +49,16 @@ export const WeatherAPI = {
         }
     },
 
-    // ── Open-Meteo 7-day forecast ──────────────────────────────────
+    /**
+     * Fetches a 7-day daily forecast from Open-Meteo and returns processed days.
+     *
+     * Requests temperature, precipitation, wind, weather code (daily), and
+     * surface pressure (hourly) in a single call. Units are °F and mph as
+     * required by the scoring engine.
+     *
+     * @throws If the HTTP response status is not OK.
+     * @returns An array of `WeatherDay` objects, one per forecast day.
+     */
     async fetchWeather(): Promise<WeatherDay[]> {
         const params = new URLSearchParams({
             latitude:      String(CONFIG.WEATHER_LAT),
@@ -60,6 +85,16 @@ export const WeatherAPI = {
         return this.processWeather(data);
     },
 
+    /**
+     * Transforms a raw Open-Meteo API response into an array of `WeatherDay` objects.
+     *
+     * Pressure is averaged across the day's 24 hourly readings (nulls excluded).
+     * The barometric trend compares the 6 AM reading to the 6 PM reading:
+     * diff > 1.5 hPa = rising, diff < −1.5 hPa = falling, otherwise stable.
+     *
+     * @param data - Raw JSON response from the Open-Meteo forecast endpoint.
+     * @returns Processed array of `WeatherDay` objects.
+     */
     processWeather(data: OpenMeteoResponse): WeatherDay[] {
         const { daily, hourly } = data;
         const days: WeatherDay[] = [];
@@ -102,7 +137,15 @@ export const WeatherAPI = {
         return days;
     },
 
-    // ── NOAA tide hi-lo predictions ────────────────────────────────
+    /**
+     * Fetches NOAA hi-lo tide predictions for the forecast period.
+     *
+     * Uses `CONFIG.NOAA_STATION` (Port Canaveral). If the NOAA API returns an
+     * error payload, falls back to `fallbackTides()`.
+     *
+     * @throws If the HTTP response status is not OK.
+     * @returns Tide events grouped by "YYYY-MM-DD" date key.
+     */
     async fetchTides(): Promise<Record<string, TideEvent[]>> {
         const today   = new Date();
         const endDate = new Date(today);
@@ -138,8 +181,16 @@ export const WeatherAPI = {
         return this.processTides(data.predictions!);
     },
 
-    // Group NOAA predictions by date; store times as plain {hour, minute}
-    // to avoid browser-timezone mis-parsing of the station's local time strings.
+    /**
+     * Groups raw NOAA prediction rows by date and converts time strings to
+     * plain `{hour, minute}` numbers.
+     *
+     * Time strings are parsed manually (not via `new Date()`) to avoid
+     * browser timezone misinterpretation of the station's local time values.
+     *
+     * @param predictions - Array of raw `NoaaPrediction` rows from NOAA.
+     * @returns Tide events grouped by "YYYY-MM-DD" date key.
+     */
     processTides(predictions: NoaaPrediction[]): Record<string, TideEvent[]> {
         const byDate: Record<string, TideEvent[]> = {};
 
@@ -166,6 +217,14 @@ export const WeatherAPI = {
 
     // ── Fallbacks when APIs are unavailable ────────────────────────
 
+    /**
+     * Generates synthetic tide data for the forecast period.
+     *
+     * Models Brevard County's mixed semidiurnal pattern by shifting the base
+     * high tide time ~50 minutes per day. Used when the NOAA API is unavailable.
+     *
+     * @returns Fallback tide events grouped by "YYYY-MM-DD" date key.
+     */
     fallbackTides(): Record<string, TideEvent[]> {
         const tides: Record<string, TideEvent[]> = {};
         const today = new Date();
@@ -190,6 +249,15 @@ export const WeatherAPI = {
         return tides;
     },
 
+    /**
+     * Generates placeholder weather data for the forecast period.
+     *
+     * Returns idealized conditions (clear sky, light wind, stable pressure)
+     * representative of a typical Brevard County spring day. Used when the
+     * Open-Meteo API is unavailable.
+     *
+     * @returns An array of `WeatherDay` objects, one per forecast day.
+     */
     fallbackWeather(): WeatherDay[] {
         const today = new Date();
         return Array.from<unknown, WeatherDay>({ length: CONFIG.FORECAST_DAYS }, (_, i) => {
@@ -211,7 +279,14 @@ export const WeatherAPI = {
 
     // ── Helpers ────────────────────────────────────────────────────
 
-    // WMO weather code → emoji icon + short text label
+    /**
+     * Maps a WMO weather interpretation code to an emoji icon and short label.
+     *
+     * Covers the full WMO code range (0–99) plus a catch-all for unknown codes.
+     *
+     * @param code - WMO weather interpretation code from the Open-Meteo response.
+     * @returns A `WeatherInfo` with `icon` (emoji) and `desc` (short text).
+     */
     weatherInfo(code: number): WeatherInfo {
         if (code === 0)   return { icon: '☀️',  desc: 'Clear' };
         if (code <= 2)    return { icon: '⛅',  desc: 'Partly Cloudy' };
@@ -225,7 +300,12 @@ export const WeatherAPI = {
         return { icon: '🌤️', desc: 'Variable' };
     },
 
-    // Compass direction from meteorological degrees
+    /**
+     * Converts a meteorological wind direction in degrees to a 16-point compass abbreviation.
+     *
+     * @param deg - Wind direction in degrees (0 = N, 90 = E, 180 = S, 270 = W).
+     * @returns A compass string such as `'NE'` or `'SSW'`.
+     */
     degToCompass(deg: number): string {
         const dirs = [
             'N','NNE','NE','ENE','E','ESE','SE','SSE',
@@ -234,7 +314,12 @@ export const WeatherAPI = {
         return dirs[Math.round(deg / 22.5) % 16]!;
     },
 
-    // Format a tide time object to "6:42 AM"
+    /**
+     * Formats a tide event time object as a 12-hour AM/PM string.
+     *
+     * @param event - An object with `hour` (0–23) and `minute` (0–59).
+     * @returns A formatted string such as `'6:30 AM'` or `'12:05 PM'`.
+     */
     formatTideTime({ hour, minute }: Pick<TideEvent, 'hour' | 'minute'>): string {
         const h    = hour % 12 || 12;
         const m    = String(minute).padStart(2, '0');

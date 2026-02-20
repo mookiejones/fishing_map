@@ -4,6 +4,14 @@
 
 import type { FishingSpot } from './types';
 
+/**
+ * Static array of 14 fishing hotspots across Brevard County, FL.
+ *
+ * Each entry describes a location's species targets, tide preference,
+ * habitat features, and locally-sourced fishing tips. This data is used by
+ * `FishingEngine.rateSpot()` to score conditions and by `AppContext` to
+ * derive scored markers for the map.
+ */
 export const FISHING_SPOTS: FishingSpot[] = [
     {
         id: 'mosquito-lagoon',

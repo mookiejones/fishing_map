@@ -3,12 +3,9 @@
 //   user location, and habitat overlays (oyster / seagrass)
 // ============================================================
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, Button, Paper, Stack } from '@mui/material';
-import { APIProvider, Map, Marker, useMap, useApiIsLoaded } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, Marker, useApiIsLoaded ,AdvancedMarker} from '@vis.gl/react-google-maps';
 import { useAppContext } from '../context/AppContext';
 import { OYSTER_BEDS, SEAGRASS_BEDS } from '../data/overlays';
-import type { OverlayPolygon } from '../data/overlays';
 import type { ScoredSpot } from '../context/AppContext';
 import SetupBanner from './SetupBannerComponent';
 import HabitatOverlaysComponent from './HabitatOverlaysComponent';
@@ -16,8 +13,15 @@ import MAP_STYLES from './mapStyles';
 import { CONFIG } from '../config';
 import speciesPath from './speciesPath';
 
+const { AdvancedMarkerElement } = google.maps.marker;
+
+const { SymbolPath :{CIRCLE}} = google.maps;
 const PLACEHOLDER_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
+/**
+ * Top-level map component.
+ * Shows `<SetupBanner>` when no valid API key is configured; otherwise wraps `<MapInner>` in `<APIProvider>`.
+ */
 export default function FishingMap() {
     const { apiKey, saveApiKey } = useAppContext();
 
@@ -34,6 +38,12 @@ export default function FishingMap() {
 
 // ── Map content ───────────────────────────────────────────────
 
+/**
+ * Inner map component rendered after the Google Maps API is loaded.
+ * Renders habitat polygon overlays, one `<Marker>` per scored (spot × species) pair,
+ * and the user's current location as a pulsing blue dot (when geolocation is granted).
+ * Must be mounted inside an `<APIProvider>`.
+ */
 export function MapInner() {
     const {
         scoredSpots, selectedSpot, setSelectedSpot,
@@ -88,11 +98,11 @@ export function MapInner() {
                             <Marker
                                 key={`${spot.id}-${species}`}
                                 position={{ lat, lng }}
-                                title={`${spot.name} (${species}) — ${result.rating} (${result.score})`}
+                                title={`${spot.name} (${species}) — ${result.rating} (${result.score})`}                                
                                 icon={icon}
                                 zIndex={isSelected ? 1000 : result.score}
                                 onClick={() => setSelectedSpot({ spot, result, species })}
-                            />
+                           />
                         );
                     })}
 
@@ -103,7 +113,7 @@ export function MapInner() {
                                 position={userLocation}
                                 title="Your location"
                                 icon={{
-                                    path:          google.maps.SymbolPath.CIRCLE,
+                                    path:          CIRCLE,
                                     fillColor:     '#4285F4',
                                     fillOpacity:   0.15,
                                     strokeColor:   '#4285F4',
@@ -117,7 +127,7 @@ export function MapInner() {
                                 position={userLocation}
                                 title="Your location"
                                 icon={{
-                                    path:         google.maps.SymbolPath.CIRCLE,
+                                    path:         CIRCLE,
                                     fillColor:    '#4285F4',
                                     fillOpacity:  1,
                                     strokeColor:  '#ffffff',

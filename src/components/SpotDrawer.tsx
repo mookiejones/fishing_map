@@ -17,6 +17,7 @@ interface Props {
     onClose:      () => void;
 }
 
+/** Ordered score categories rendered as labelled LinearProgress bars. */
 const SCORE_BARS: { key: keyof SelectedSpot['result']['scores']; label: string; max: number }[] = [
     { key: 'wind',        label: 'Wind',        max: 25 },
     { key: 'pressure',    label: 'Pressure',    max: 25 },
@@ -31,6 +32,10 @@ const SPECIES_COLOR: Record<string, string> = {
     redfish: '#FF6B35',
 };
 
+/**
+ * Maps a fishing rating string to a MUI chip color.
+ * @param rating - One of 'excellent', 'good', 'fair', or 'poor'.
+ */
 function ratingColor(rating: string): 'success' | 'warning' | 'error' | 'default' {
     if (rating === 'excellent') return 'success';
     if (rating === 'good')      return 'warning';
@@ -38,6 +43,13 @@ function ratingColor(rating: string): 'success' | 'warning' | 'error' | 'default
     return 'error';
 }
 
+/**
+ * Bottom-anchored drawer displayed when the user clicks a map marker.
+ * Shows spot name, species badge, overall score, per-category score bars,
+ * best fishing time, all species at the spot, physical features, and local tips.
+ * @param sidebarWidth - Current sidebar pixel width; the drawer's left edge is offset to avoid overlap.
+ * @param onClose      - Callback invoked when the drawer should close.
+ */
 export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
     const { selectedSpot } = useAppContext();
     if (!selectedSpot) return null;

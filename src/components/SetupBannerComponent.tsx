@@ -3,6 +3,11 @@ import { Box, Typography, TextField, Button, Paper, Stack } from '@mui/material'
 
 // ── Setup banner (no API key) ─────────────────────────────────
 
+/**
+ * Full-page banner rendered in place of the map when no Google Maps API key is configured.
+ * The user can enter their key and press Save (or Enter); the key is immediately persisted and applied.
+ * @param onSave - Called with the trimmed key string when the user submits.
+ */
 function SetupBanner({ onSave }: { onSave: (key: string) => void }) {
     const [draft, setDraft] = useState('');
 

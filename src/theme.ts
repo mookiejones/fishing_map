@@ -4,8 +4,26 @@
 
 import { createTheme } from '@mui/material/styles';
 
+/**
+ * Fixed pixel width of the collapsible sidebar.
+ *
+ * Referenced by `Sidebar` (its own width) and `SpotDrawer` (to offset its
+ * left edge so it does not overlap the sidebar).
+ */
 export const SIDEBAR_WIDTH = 320;
 
+/**
+ * Material-UI dark theme with a nautical color palette.
+ *
+ * Color roles:
+ * - `primary`   — accent teal (#00b4d8), used for active states and links
+ * - `secondary` — success green (#00c851), matches "excellent" rating
+ * - `background` — deep navy (#071220 default, #0c1e36 paper)
+ * - `error`     — red (#f44336), matches "poor" rating color
+ * - `warning`   — orange (#ff7a00), matches "fair" rating color
+ * - `info`      — amber (#ffc107), matches "good" rating color
+ * - `success`   — green (#00c851), matches "excellent" rating color
+ */
 export const fishingTheme = createTheme({
     palette: {
         mode: 'dark',

@@ -13,9 +13,26 @@ import type {
     SpotScores, SpotResult, TideEvent, Rating, PressureTrend,
 } from './types';
 
+/**
+ * Pure scoring engine with no external dependencies or side effects.
+ *
+ * All methods are synchronous and deterministic — the same inputs always
+ * produce the same outputs, making them straightforward to unit-test.
+ */
 export const FishingEngine = {
 
-    // ── Main entry: rate a spot for a given day's conditions ────────
+    /**
+     * Scores a single spot against one day's conditions for a given species filter.
+     *
+     * Returns `null` when the spot does not target the selected species,
+     * which signals the caller to omit a marker for that (spot × species) pair.
+     *
+     * @param spot            - The fishing location to evaluate.
+     * @param conditions      - Weather and tide conditions for the day.
+     * @param selectedSpecies - The active species filter ('all' to include all spots).
+     * @returns A `SpotResult` with score, rating, color, sub-scores, and best time,
+     *          or `null` if the spot is excluded by the species filter.
+     */
     rateSpot(
         spot: FishingSpot,
         conditions: DayConditions,
@@ -49,8 +66,15 @@ export const FishingEngine = {
         };
     },
 
-    // ── Wind: 0–25 pts ─────────────────────────────────────────────
-    // Lower wind = calmer water, better sight-fishing visibility.
+    /**
+     * Scores wind speed on a 0–25 point scale.
+     *
+     * Lower wind means calmer water and better sight-fishing visibility.
+     * Scores step down in fixed bands: calm (<5 mph) = 25, gale (≥25 mph) = 0.
+     *
+     * @param mph - Maximum wind speed in miles per hour.
+     * @returns Wind sub-score (0–25).
+     */
     scoreWind(mph: number): number {
         if (mph < 5)  return 25;
         if (mph < 10) return 20;
@@ -60,9 +84,18 @@ export const FishingEngine = {
         return 0;
     },
 
-    // ── Barometric Pressure: 0–25 pts ──────────────────────────────
-    // Rising high pressure = active fish feeding near the surface.
-    // A falling barometer drives fish deep and suppresses feeding.
+    /**
+     * Scores barometric pressure on a 0–25 point scale.
+     *
+     * Rising high pressure correlates with active surface feeding; a falling
+     * barometer suppresses feeding and drives fish deeper. The base score is
+     * determined by the absolute pressure band, then adjusted by a trend bonus
+     * (+4 rising, +1 stable, −6 falling). The result is clamped to [0, 25].
+     *
+     * @param hPa  - Average surface pressure in hectopascals.
+     * @param trend - Barometric trend direction for the day.
+     * @returns Pressure sub-score (0–25).
+     */
     scorePressure(hPa: number, trend: PressureTrend): number {
         let base: number;
         if      (hPa >= 1023) base = 21;   // High pressure
@@ -80,9 +113,21 @@ export const FishingEngine = {
         return Math.max(0, Math.min(25, base + trendBonus[trend]));
     },
 
-    // ── Tides: 0–30 pts ────────────────────────────────────────────
-    // Tide changes create current that concentrates bait and predators.
-    // Preferred tide type during prime hours (dawn/dusk) scores highest.
+    /**
+     * Scores the day's tides on a 0–30 point scale.
+     *
+     * Scoring components:
+     * - **Activity** (0–8): more tide events → more tidal flushing → higher score.
+     * - **Preference** (5 or 12): whether the spot's preferred tide type occurs.
+     * - **Prime bonus** (0 or 10): whether the preferred tide falls in a dawn or
+     *   dusk window (5–9 h or 16–20 h local time).
+     *
+     * Returns 14 (neutral) when no tides are available.
+     *
+     * @param tides - Hi-lo tide schedule for the day.
+     * @param spot  - The fishing spot (provides `tidePreference`).
+     * @returns Tides sub-score (0–30).
+     */
     scoreTides(tides: TideEvent[], spot: FishingSpot): number {
         if (tides.length === 0) return 14;
 
@@ -101,6 +146,14 @@ export const FishingEngine = {
         return Math.min(30, activityScore + preferenceScore + primeBonus);
     },
 
+    /**
+     * Returns 10 if any preferred tide event falls within a prime feeding window
+     * (dawn: 5–9 h, dusk: 16–20 h), otherwise 0.
+     *
+     * @param tides - Hi-lo tide schedule for the day.
+     * @param spot  - The fishing spot (provides `tidePreference`).
+     * @returns 10 or 0.
+     */
     primeTideBonus(tides: TideEvent[], spot: FishingSpot): number {
         for (const t of tides) {
             const isDawn = t.hour >= 5 && t.hour <= 9;
@@ -114,9 +167,19 @@ export const FishingEngine = {
         return 0;
     },
 
-    // ── Temperature: 0–20 pts ──────────────────────────────────────
-    // Uses air temp as a proxy for water temp (FL water is ~3°F cooler).
-    // Each species has an optimal thermal comfort range.
+    /**
+     * Scores water temperature on a 0–20 point scale for a given species.
+     *
+     * Air temperature is used as a proxy for water temperature; Florida
+     * inshore water runs roughly 3 °F cooler than air. Each species has an
+     * optimal water temperature where it scores 20. Scores decay linearly
+     * with distance from optimal, flooring at 5 within the comfort range
+     * and falling to 0 when the temperature exceeds the species' min/max.
+     *
+     * @param airTempF - Daily high air temperature in °F.
+     * @param species  - Target species being scored.
+     * @returns Temperature sub-score (0–20).
+     */
     scoreTemperature(airTempF: number, species: Species): number {
         const waterTempF = airTempF - 3;
 
@@ -139,7 +202,15 @@ export const FishingEngine = {
         return Math.max(5, Math.round(20 - distFromOptimal * 0.75));
     },
 
-    // ── Daily aggregate rating for the sidebar day cards ───────────
+    /**
+     * Produces a single aggregate `Rating` for a day card in the sidebar.
+     *
+     * Uses a simplified temperature proxy (distance from a 78 °F target)
+     * rather than per-species scoring, since no species is selected at this level.
+     *
+     * @param conditions - Weather and tide conditions for the day.
+     * @returns A `Rating` string ('excellent' | 'good' | 'fair' | 'poor').
+     */
     getDailyRating(conditions: DayConditions): Rating {
         const wind     = this.scoreWind(conditions.windSpeed);
         const pressure = this.scorePressure(conditions.pressure, conditions.pressureTrend);
@@ -149,7 +220,14 @@ export const FishingEngine = {
         return this.getRating(wind + pressure + temp + tides);
     },
 
-    // ── Helpers ────────────────────────────────────────────────────
+    /**
+     * Maps a numeric score to a `Rating` string.
+     *
+     * Thresholds: ≥78 excellent · ≥57 good · ≥37 fair · <37 poor.
+     *
+     * @param score - Aggregate score (typically 0–100).
+     * @returns The corresponding `Rating`.
+     */
     getRating(score: number): Rating {
         if (score >= 78) return 'excellent';
         if (score >= 57) return 'good';
@@ -157,6 +235,16 @@ export const FishingEngine = {
         return 'poor';
     },
 
+    /**
+     * Returns the hex color associated with a `Rating`.
+     *
+     * Colors match the MUI theme palette and the map marker fill colors:
+     * excellent = #00c851 (green), good = #ffc107 (amber),
+     * fair = #ff7a00 (orange), poor = #f44336 (red).
+     *
+     * @param rating - A `Rating` string.
+     * @returns A six-character hex color string, e.g. '#00c851'.
+     */
     getRatingColor(rating: Rating): string {
         const colors: Record<Rating, string> = {
             excellent: '#00c851',
@@ -167,7 +255,21 @@ export const FishingEngine = {
         return colors[rating];
     },
 
-    // Suggest the best fishing window based on tides and spot preference
+    /**
+     * Suggests the best fishing window as a human-readable string.
+     *
+     * Priority order:
+     * 1. Preferred tide type during a prime window (dawn or dusk) →
+     *    e.g. "Dawn tide (~6:00 AM)"
+     * 2. Any preferred tide at any time →
+     *    e.g. "Around 11:00 AM (high tide)"
+     * 3. No preferred tide in the schedule → "Dawn and dusk periods"
+     * 4. No tides at all → "Dawn and dusk periods"
+     *
+     * @param tides - Hi-lo tide schedule for the day.
+     * @param spot  - The fishing spot (provides `tidePreference`).
+     * @returns A descriptive string shown in the SpotDrawer.
+     */
     getBestTime(tides: TideEvent[], spot: FishingSpot): string {
         if (tides.length === 0) return 'Dawn and dusk periods';
 
@@ -192,6 +294,15 @@ export const FishingEngine = {
     },
 };
 
+/**
+ * Formats a 24-hour integer as a 12-hour clock string with AM/PM.
+ *
+ * Minutes are always shown as `:00` — this is intentional since the function
+ * is used with whole-hour tide event times.
+ *
+ * @param h - Hour in 24-hour format (0–23).
+ * @returns Formatted time string, e.g. `'6:00 AM'` or `'12:00 PM'`.
+ */
 export function fmtHour(h: number): string {
     const display = h % 12 || 12;
     return `${display}:00 ${h < 12 ? 'AM' : 'PM'}`;

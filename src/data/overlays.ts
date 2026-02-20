@@ -4,14 +4,27 @@
 //   Brevard County, FL. Not survey-grade data.
 // ============================================================
 
+/**
+ * A single polygon overlay displayed on the map to indicate a habitat area.
+ *
+ * Coordinates are best-effort GIS approximations — not survey-grade data.
+ */
 export interface OverlayPolygon {
+    /** Unique kebab-case identifier, e.g. 'oyster-ml-north'. */
     id:          string;
+    /** Human-readable display name shown in tooltips. */
     name:        string;
+    /** Ordered list of lat/lng vertices defining the polygon boundary. */
     coordinates: { lat: number; lng: number }[];
 }
 
 // ── Oyster Beds ───────────────────────────────────────────────
-// Shell reefs and oyster bars scattered through the IRL system.
+
+/**
+ * Shell reef and oyster bar polygons scattered through the Indian River
+ * Lagoon system. Rendered on the map as amber-tinted polygons when the
+ * "Oyster Beds" overlay is toggled on in the sidebar.
+ */
 export const OYSTER_BEDS: OverlayPolygon[] = [
     {
         id: 'oyster-ml-north',
@@ -88,8 +101,12 @@ export const OYSTER_BEDS: OverlayPolygon[] = [
 ];
 
 // ── Seagrass Beds ─────────────────────────────────────────────
-// Submerged aquatic vegetation (SAV) beds, primarily shoal grass
-// and manatee grass, throughout the IRL/Mosquito Lagoon system.
+
+/**
+ * Submerged aquatic vegetation (SAV) bed polygons — primarily shoal grass
+ * and manatee grass — throughout the IRL/Mosquito Lagoon system. Rendered
+ * as green-tinted polygons when the "Seagrass Areas" overlay is toggled on.
+ */
 export const SEAGRASS_BEDS: OverlayPolygon[] = [
     {
         id: 'grass-ml-north',

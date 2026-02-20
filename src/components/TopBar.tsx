@@ -7,12 +7,14 @@ import { AppBar, Toolbar, Typography, Chip, Stack } from '@mui/material';
 import { useAppContext } from '../context/AppContext';
 import type { DataStatus } from '../context/AppContext';
 
+/** Maps each `DataStatus` to its display label and MUI chip color. */
 const STATUS_CONFIG: Record<DataStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
     loading: { label: 'Loading…',     color: 'warning' },
     ok:      { label: 'Live data',    color: 'success' },
     error:   { label: 'Offline data', color: 'error'   },
 };
 
+/** Fixed app header displaying the title and a live/offline data status chip. */
 export default function TopBar() {
     const { dataStatus } = useAppContext();
     const { label, color } = STATUS_CONFIG[dataStatus];

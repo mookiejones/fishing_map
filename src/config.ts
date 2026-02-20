@@ -13,6 +13,14 @@
 
 import type { AppConfig } from './types';
 
+/**
+ * Global application configuration.
+ *
+ * The Google Maps API key is read from `localStorage` (`fishing_map_gkey`)
+ * on startup so the user can supply it through the in-app setup banner without
+ * modifying source code. All other values are static constants targeting
+ * Brevard County, Florida.
+ */
 export const CONFIG: AppConfig = {
     // Replace this value — or enter the key in the on-screen setup panel
     GOOGLE_MAPS_API_KEY: localStorage.getItem('fishing_map_gkey') ?? 'AIzaSyBiZMDmP5rBNL8P00G7YuHYLBDOzY5ohn8',

@@ -5,6 +5,7 @@ import type { OverlayPolygon } from '../data/overlays';
 
 // ── Imperative polygon overlay manager ───────────────────────
 
+/** Props for a single set of imperative polygon overlays rendered on the map. */
 export interface HabitatOverlaysProps {
     polygons:     OverlayPolygon[];
     visible:      boolean;
@@ -13,6 +14,11 @@ export interface HabitatOverlaysProps {
     fillOpacity:  number;
 }
 
+/**
+ * Renders a group of `google.maps.Polygon` instances imperatively on the current map.
+ * Polygons are created once when the map is ready and toggled via `setMap()` without recreation.
+ * Returns `null` — this component has no DOM output of its own.
+ */
 function HabitatOverlaysComponent({ polygons, visible, strokeColor, fillColor, fillOpacity }: HabitatOverlaysProps) {
     const map = useMap();
     const instancesRef = useRef<google.maps.Polygon[]>([]);
