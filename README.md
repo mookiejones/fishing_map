@@ -1,4 +1,13 @@
-# Brevard County Fishing Hotspots
+# 🎣 Brevard County Fishing Hotspots
+
+[![CI](https://github.com/mookiejones/fishing_map/actions/workflows/ci.yml/badge.svg)](https://github.com/mookiejones/fishing_map/actions/workflows/ci.yml)
+[![Deploy](https://github.com/mookiejones/fishing_map/actions/workflows/deploy.yml/badge.svg)](https://github.com/mookiejones/fishing_map/actions/workflows/deploy.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-0969da?logo=github)](https://mookiejones.github.io/fishing_map/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![MUI](https://img.shields.io/badge/MUI-v5-007FFF?logo=mui&logoColor=white)](https://mui.com/)
+[![Tested with Vitest](https://img.shields.io/badge/Vitest-261%20tests-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
 
 An interactive fishing map for **Brevard County, Florida** targeting Tarpon, Snook, and Redfish. It combines a 7-day weather forecast, NOAA tide predictions, and a 100-point scoring engine to surface the best spots and windows each day.
 
@@ -73,22 +82,23 @@ Ratings: **Excellent** ≥78 · **Good** ≥57 · **Fair** ≥37 · **Poor** <37
 ```
 src/
 ├── engine.ts            # 100-point scoring logic
-├── api.ts               # Open-Meteo + NOAA fetch + processing
+├── api/                 # Open-Meteo + NOAA fetch + processing (one file per function)
 ├── spots.ts             # 14 hardcoded Brevard County hotspots
-├── config.ts            # API key + constants
+├── config.ts            # API key (env var / localStorage) + constants
 ├── utils.ts             # buildConditions(), capitalize()
 ├── types.ts             # Shared TypeScript types
 ├── theme.ts             # MUI dark theme
 ├── context/
 │   └── AppContext.tsx   # All app state; no prop drilling
-├── components/
+├── components/          # One file per component
 │   ├── TopBar.tsx
 │   ├── Sidebar.tsx
 │   ├── FishingMap.tsx
 │   ├── SpotDrawer.tsx
-│   └── ...              # Map helpers, overlays, setup banner
+│   └── ...
 └── data/
-    └── overlays.ts      # Oyster bed + seagrass polygon coordinates
+    ├── overlays.ts      # Oyster bed + seagrass polygon coordinates
+    └── boatRamps.ts     # 12 public boat ramp locations
 ```
 
 ---

@@ -14,9 +14,7 @@ import MAP_STYLES from './mapStyles';
 import { CONFIG } from '../config';
 import speciesPath from './speciesPath';
 
-const { AdvancedMarkerElement } = google.maps.marker;
 
-const { SymbolPath :{CIRCLE}} = google.maps;
 const PLACEHOLDER_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 /**
@@ -107,23 +105,31 @@ export function MapInner() {
                         );
                     })}
 
-                    {/* Boat ramp markers */}
-                    {showBoatRamps && BOAT_RAMPS.map(ramp => (
-                        <Marker
-                            key={ramp.id}
-                            position={{ lat: ramp.lat, lng: ramp.lng }}
-                            title={ramp.name}
-                            icon={{
-                                path:         google.maps.SymbolPath.CIRCLE,
-                                fillColor:    '#00b4d8',
-                                fillOpacity:  0.9,
-                                strokeColor:  '#ffffff',
-                                strokeWeight: 1.5,
-                                scale:        7,
-                            }}
-                            zIndex={500}
-                        />
-                    ))}
+                    {/* Boat ramp markers — SVG sailboat icon */}
+                    {showBoatRamps && (() => {
+                        const boatIcon: google.maps.Icon = {
+                            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                                `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28">` +
+                                `<circle cx="14" cy="14" r="13" fill="#00b4d8" stroke="white" stroke-width="1.5"/>` +
+                                `<path d="M7 17 L21 17 L19 21 L9 21Z" fill="white"/>` +
+                                `<line x1="14" y1="17" x2="14" y2="7" stroke="white" stroke-width="1.5"/>` +
+                                `<path d="M14 7 L21 17 L14 17Z" fill="white" opacity="0.85"/>` +
+                                `<path d="M14 7 L8 14 L14 14Z" fill="white" opacity="0.6"/>` +
+                                `</svg>`
+                            )}`,
+                            scaledSize: new google.maps.Size(28, 28),
+                            anchor:     new google.maps.Point(14, 14),
+                        };
+                        return BOAT_RAMPS.map(ramp => (
+                            <Marker
+                                key={ramp.id}
+                                position={{ lat: ramp.lat, lng: ramp.lng }}
+                                title={ramp.name}
+                                icon={boatIcon}
+                                zIndex={500}
+                            />
+                        ));
+                    })()}
 
                     {/* User location — outer ring + inner dot */}
                     {userLocation && (
@@ -132,7 +138,7 @@ export function MapInner() {
                                 position={userLocation}
                                 title="Your location"
                                 icon={{
-                                    path:          CIRCLE,
+                                    path:          google.maps.SymbolPath.CIRCLE,
                                     fillColor:     '#4285F4',
                                     fillOpacity:   0.15,
                                     strokeColor:   '#4285F4',
@@ -146,7 +152,7 @@ export function MapInner() {
                                 position={userLocation}
                                 title="Your location"
                                 icon={{
-                                    path:         CIRCLE,
+                                    path:         google.maps.SymbolPath.CIRCLE,
                                     fillColor:    '#4285F4',
                                     fillOpacity:  1,
                                     strokeColor:  '#ffffff',
