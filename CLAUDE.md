@@ -13,9 +13,11 @@ npm run dev      # Vite dev server at http://localhost:5173
 npm run build    # tsc type-check + Vite production build → dist/
 npm run preview  # Preview production build locally
 npx tsc --noEmit # Type-check only (fastest correctness check)
+npm run test     # Vitest in watch mode
+npm run test:run # Vitest single run (CI / pre-push)
 ```
 
-There are no tests in this project.
+Test files live alongside source in `src/` (and `src/data/`) with `.test.ts` extensions. Run a single file: `npx vitest run src/engine.test.ts`. Tests use jsdom environment (required because `config.ts` calls `localStorage` at import time).
 
 ## Architecture
 
