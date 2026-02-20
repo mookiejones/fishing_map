@@ -6,6 +6,7 @@
 import { APIProvider, Map, Marker, useApiIsLoaded ,AdvancedMarker} from '@vis.gl/react-google-maps';
 import { useAppContext } from '../context/AppContext';
 import { OYSTER_BEDS, SEAGRASS_BEDS } from '../data/overlays';
+import { BOAT_RAMPS } from '../data/boatRamps';
 import type { ScoredSpot } from '../context/AppContext';
 import SetupBanner from './SetupBannerComponent';
 import HabitatOverlaysComponent from './HabitatOverlaysComponent';
@@ -47,7 +48,7 @@ export default function FishingMap() {
 export function MapInner() {
     const {
         scoredSpots, selectedSpot, setSelectedSpot,
-        userLocation, showOysterBeds, showSeagrass,
+        userLocation, showOysterBeds, showSeagrass, showBoatRamps,
     } = useAppContext();
 
     const loaded = useApiIsLoaded();
@@ -105,6 +106,24 @@ export function MapInner() {
                            />
                         );
                     })}
+
+                    {/* Boat ramp markers */}
+                    {showBoatRamps && BOAT_RAMPS.map(ramp => (
+                        <Marker
+                            key={ramp.id}
+                            position={{ lat: ramp.lat, lng: ramp.lng }}
+                            title={ramp.name}
+                            icon={{
+                                path:         google.maps.SymbolPath.CIRCLE,
+                                fillColor:    '#00b4d8',
+                                fillOpacity:  0.9,
+                                strokeColor:  '#ffffff',
+                                strokeWeight: 1.5,
+                                scale:        7,
+                            }}
+                            zIndex={500}
+                        />
+                    ))}
 
                     {/* User location — outer ring + inner dot */}
                     {userLocation && (

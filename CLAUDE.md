@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Rules
+
+- **One file per function/component**: each React component, helper function, or data module lives in its own file. Do not co-locate multiple distinct exports in one file unless they are private implementation details of a single exported symbol.
+- **One test file per function**: each tested function or method gets its own `.test.ts` file in the matching `tests/<module>/` subdirectory.
+
 ## Git
 
 After making any code changes, always commit and push them to the remote without asking for confirmation first.
@@ -17,7 +22,7 @@ npm run test     # Vitest in watch mode
 npm run test:run # Vitest single run (CI / pre-push)
 ```
 
-Test files live alongside source in `src/` (and `src/data/`) with `.test.ts` extensions. Run a single file: `npx vitest run src/engine.test.ts`. Tests use jsdom environment (required because `config.ts` calls `localStorage` at import time).
+Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts` file per function. Run a single file: `npx vitest run tests/engine/scoreWind.test.ts`. Tests use jsdom environment (required because `config.ts` calls `localStorage` at import time).
 
 ## Architecture
 
@@ -50,6 +55,7 @@ All components call `useAppContext()` directly — no prop drilling.
 | `src/api.ts` | `WeatherAPI` — Open-Meteo (weather/pressure) + NOAA CO-OPS hi-lo tides. Both free, no auth. Fallback data used when APIs fail |
 | `src/spots.ts` | `FISHING_SPOTS` — 14 hardcoded Brevard County spots with species, tidePreference, tips |
 | `src/data/overlays.ts` | `OYSTER_BEDS` + `SEAGRASS_BEDS` — approximate polygon coordinates for map overlays |
+| `src/data/boatRamps.ts` | `BOAT_RAMPS` — 12 public boat ramp point locations (lat/lng) for Brevard County |
 | `src/config.ts` | `CONFIG` — API key (reads `localStorage` key `fishing_map_gkey`), map center, NOAA station, weather coords |
 | `src/utils.ts` | `buildConditions()` — assembles `DayConditions` from `WeatherDay` + tides |
 | `src/theme.ts` | MUI dark nautical theme + `SIDEBAR_WIDTH = 320` |

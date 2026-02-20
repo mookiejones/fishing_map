@@ -58,6 +58,7 @@ export default function Sidebar() {
         conditions,
         showOysterBeds, setShowOysterBeds,
         showSeagrass,   setShowSeagrass,
+        showBoatRamps,  setShowBoatRamps,
         sidebarOpen,    setSidebarOpen,
     } = useAppContext();
 
@@ -138,6 +139,18 @@ export default function Sidebar() {
                                 />
                             }
                             label={<Typography variant="caption">🌿 Seagrass Areas</Typography>}
+                            sx={{ m: 0 }}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    size="small"
+                                    checked={showBoatRamps}
+                                    onChange={(_, v) => setShowBoatRamps(v)}
+                                    sx={{ '& .MuiSwitch-thumb': { bgcolor: '#00b4d8' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00b4d8 !important' } }}
+                                />
+                            }
+                            label={<Typography variant="caption">⚓ Boat Ramps</Typography>}
                             sx={{ m: 0 }}
                         />
                     </Stack>

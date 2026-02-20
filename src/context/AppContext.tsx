@@ -72,6 +72,8 @@ interface AppContextValue {
     setShowOysterBeds: (v: boolean) => void;
     showSeagrass:      boolean;
     setShowSeagrass:   (v: boolean) => void;
+    showBoatRamps:     boolean;
+    setShowBoatRamps:  (v: boolean) => void;
 
     // User location (from browser Geolocation API)
     userLocation: { lat: number; lng: number } | null;
@@ -112,6 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [dataStatus, setDataStatus]           = useState<DataStatus>('loading');
     const [showOysterBeds, setShowOysterBeds]   = useState<boolean>(false);
     const [showSeagrass, setShowSeagrass]       = useState<boolean>(false);
+    const [showBoatRamps, setShowBoatRamps]     = useState<boolean>(false);
     const [userLocation, setUserLocation]       = useState<{ lat: number; lng: number } | null>(null);
     const [sidebarOpen, setSidebarOpen]         = useState<boolean>(true);
 
@@ -178,6 +181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         conditions, scoredSpots,
         showOysterBeds, setShowOysterBeds,
         showSeagrass,   setShowSeagrass,
+        showBoatRamps,  setShowBoatRamps,
         userLocation,
         sidebarOpen, setSidebarOpen,
     };
