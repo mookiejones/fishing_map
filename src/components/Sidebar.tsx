@@ -3,12 +3,12 @@
 //   habitat overlay toggles, and collapse/expand control
 // ============================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Box, Typography, ToggleButton, ToggleButtonGroup, Card,
     CardActionArea, CardContent, Chip, Stack, Divider,
     CircularProgress, List, ListItem, ListItemText,
-    Switch, FormControlLabel, IconButton, Tooltip,
+    Switch, FormControlLabel, IconButton, Tooltip, Collapse,
 } from '@mui/material';
 import AirIcon from '@mui/icons-material/Air';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
@@ -16,6 +16,8 @@ import CompressIcon from '@mui/icons-material/Compress';
 import WaterIcon from '@mui/icons-material/Water';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { SIDEBAR_WIDTH } from '../theme';
 import { WeatherAPI } from '../api/api';
 import { FishingEngine } from '../engine';
@@ -61,6 +63,9 @@ export default function Sidebar() {
         showBoatRamps,  setShowBoatRamps,
         sidebarOpen,    setSidebarOpen,
     } = useAppContext();
+
+    const [forecastOpen, setForecastOpen]     = useState(true);
+    const [conditionsOpen, setConditionsOpen] = useState(true);
 
     return (
         <Box sx={{
@@ -166,105 +171,138 @@ export default function Sidebar() {
                         </Box>
                     ) : (
                         <>
-                            <Box sx={{ p: 1.5, pt: 1 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                    7-DAY FORECAST
-                                </Typography>
-                                <Stack spacing={0.75}>
-                                    {weatherDays.map((day, i) => {
-                                        const d          = new Date(day.date + 'T12:00:00');
-                                        const dayName    = i === 0 ? 'Today' : DAY_NAMES[d.getDay()]!;
-                                        const tides      = tidesByDate[day.date] ?? [];
-                                        const dayConds   = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
-                                        const rating     = FishingEngine.getDailyRating(dayConds);
-                                        const wx         = WeatherAPI.weatherInfo(day.weatherCode);
-                                        const isSelected = i === selectedDay;
-
-                                        return (
-                                            <Card
-                                                key={day.date}
-                                                elevation={0}
-                                                sx={{ outline: isSelected ? '2px solid' : 'none', outlineColor: 'primary.main' }}
-                                            >
-                                                <CardActionArea onClick={() => setSelectedDay(i)}>
-                                                    <CardContent sx={{ p: '8px 12px !important' }}>
-                                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                                            <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{wx.icon}</Typography>
-                                                            <Box sx={{ flex: 1 }}>
-                                                                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                                    <Typography variant="body2" fontWeight={isSelected ? 700 : 400}>
-                                                                        {dayName}
-                                                                    </Typography>
-                                                                    <Chip
-                                                                        label={rating}
-                                                                        size="small"
-                                                                        color={ratingChipColor(rating)}
-                                                                        sx={{ height: 18, fontSize: 10 }}
-                                                                    />
-                                                                </Stack>
-                                                                <Stack direction="row" spacing={1}>
-                                                                    <Typography variant="caption" color="text.secondary">
-                                                                        {Math.round(day.tempMax)}°/{Math.round(day.tempMin)}°F
-                                                                    </Typography>
-                                                                    <Typography variant="caption" color="text.secondary">
-                                                                        💨 {Math.round(day.windSpeed)} mph
-                                                                    </Typography>
-                                                                </Stack>
-                                                            </Box>
-                                                        </Stack>
-                                                    </CardContent>
-                                                </CardActionArea>
-                                            </Card>
-                                        );
-                                    })}
+                            {/* ── 7-Day Forecast (collapsible) ── */}
+                            <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
+                                <Stack
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    onClick={() => setForecastOpen(o => !o)}
+                                    sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                >
+                                    <Typography variant="caption" color="text.secondary">
+                                        7-DAY FORECAST
+                                    </Typography>
+                                    {forecastOpen
+                                        ? <ExpandLessIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                        : <ExpandMoreIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                    }
                                 </Stack>
                             </Box>
+                            <Collapse in={forecastOpen}>
+                                <Box sx={{ px: 1.5, pb: 1 }}>
+                                    <Stack spacing={0.75}>
+                                        {weatherDays.map((day, i) => {
+                                            const d          = new Date(day.date + 'T12:00:00');
+                                            const dayName    = i === 0 ? 'Today' : DAY_NAMES[d.getDay()]!;
+                                            const tides      = tidesByDate[day.date] ?? [];
+                                            const dayConds   = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
+                                            const rating     = FishingEngine.getDailyRating(dayConds);
+                                            const wx         = WeatherAPI.weatherInfo(day.weatherCode);
+                                            const isSelected = i === selectedDay;
+
+                                            return (
+                                                <Card
+                                                    key={day.date}
+                                                    elevation={0}
+                                                    sx={{ outline: isSelected ? '2px solid' : 'none', outlineColor: 'primary.main' }}
+                                                >
+                                                    <CardActionArea onClick={() => setSelectedDay(i)}>
+                                                        <CardContent sx={{ p: '8px 12px !important' }}>
+                                                            <Stack direction="row" alignItems="center" spacing={1}>
+                                                                <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{wx.icon}</Typography>
+                                                                <Box sx={{ flex: 1 }}>
+                                                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                                        <Typography variant="body2" fontWeight={isSelected ? 700 : 400}>
+                                                                            {dayName}
+                                                                        </Typography>
+                                                                        <Chip
+                                                                            label={rating}
+                                                                            size="small"
+                                                                            color={ratingChipColor(rating)}
+                                                                            sx={{ height: 18, fontSize: 10 }}
+                                                                        />
+                                                                    </Stack>
+                                                                    <Stack direction="row" spacing={1}>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            {Math.round(day.tempMax)}°/{Math.round(day.tempMin)}°F
+                                                                        </Typography>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            💨 {Math.round(day.windSpeed)} mph
+                                                                        </Typography>
+                                                                    </Stack>
+                                                                </Box>
+                                                            </Stack>
+                                                        </CardContent>
+                                                    </CardActionArea>
+                                                </Card>
+                                            );
+                                        })}
+                                    </Stack>
+                                </Box>
+                            </Collapse>
 
                             {conditions && (
                                 <>
                                     <Divider />
-                                    <Box sx={{ p: 1.5 }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                                            CONDITIONS
-                                        </Typography>
-                                        <Stack spacing={0.5}>
-                                            <CondRow icon={<AirIcon fontSize="inherit" />} label="Wind">
-                                                {Math.round(conditions.windSpeed)} mph {WeatherAPI.degToCompass(conditions.windDir)}
-                                            </CondRow>
-                                            <CondRow icon={<ThermostatIcon fontSize="inherit" />} label="Temp">
-                                                {Math.round(conditions.tempMax)}°F high
-                                            </CondRow>
-                                            <CondRow icon={<CompressIcon fontSize="inherit" />} label="Pressure">
-                                                {conditions.pressure} hPa ({conditions.pressureTrend})
-                                            </CondRow>
-                                            <CondRow icon={<WaterIcon fontSize="inherit" />} label="Precip">
-                                                {conditions.precipitation.toFixed(1)} in
-                                            </CondRow>
+
+                                    {/* ── Conditions (collapsible) ── */}
+                                    <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
+                                        <Stack
+                                            direction="row"
+                                            justifyContent="space-between"
+                                            alignItems="center"
+                                            onClick={() => setConditionsOpen(o => !o)}
+                                            sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                        >
+                                            <Typography variant="caption" color="text.secondary">
+                                                CONDITIONS
+                                            </Typography>
+                                            {conditionsOpen
+                                                ? <ExpandLessIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                                : <ExpandMoreIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                            }
                                         </Stack>
                                     </Box>
+                                    <Collapse in={conditionsOpen}>
+                                        <Box sx={{ px: 1.5, pb: 1 }}>
+                                            <Stack spacing={0.5}>
+                                                <CondRow icon={<AirIcon fontSize="inherit" />} label="Wind">
+                                                    {Math.round(conditions.windSpeed)} mph {WeatherAPI.degToCompass(conditions.windDir)}
+                                                </CondRow>
+                                                <CondRow icon={<ThermostatIcon fontSize="inherit" />} label="Temp">
+                                                    {Math.round(conditions.tempMax)}°F high
+                                                </CondRow>
+                                                <CondRow icon={<CompressIcon fontSize="inherit" />} label="Pressure">
+                                                    {conditions.pressure} hPa ({conditions.pressureTrend})
+                                                </CondRow>
+                                                <CondRow icon={<WaterIcon fontSize="inherit" />} label="Precip">
+                                                    {conditions.precipitation.toFixed(1)} in
+                                                </CondRow>
+                                            </Stack>
 
-                                    {conditions.tides.length > 0 && (
-                                        <>
-                                            <Divider />
-                                            <Box sx={{ p: 1.5 }}>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                                    TIDES — Port Canaveral
-                                                </Typography>
-                                                <List dense disablePadding>
-                                                    {conditions.tides.map((t, i) => (
-                                                        <ListItem key={i} disablePadding>
-                                                            <ListItemText
-                                                                primary={`${t.type === 'H' ? '▲ High' : '▼ Low'}  ${WeatherAPI.formatTideTime(t)}`}
-                                                                secondary={`${t.height.toFixed(1)} ft`}
-                                                                primaryTypographyProps={{ variant: 'caption', color: t.type === 'H' ? 'primary.main' : 'text.secondary' }}
-                                                                secondaryTypographyProps={{ variant: 'caption' }}
-                                                            />
-                                                        </ListItem>
-                                                    ))}
-                                                </List>
-                                            </Box>
-                                        </>
-                                    )}
+                                            {conditions.tides.length > 0 && (
+                                                <>
+                                                    <Divider sx={{ my: 1 }} />
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                        TIDES — Port Canaveral
+                                                    </Typography>
+                                                    <List dense disablePadding>
+                                                        {conditions.tides.map((t, i) => (
+                                                            <ListItem key={i} disablePadding>
+                                                                <ListItemText
+                                                                    primary={`${t.type === 'H' ? '▲ High' : '▼ Low'}  ${WeatherAPI.formatTideTime(t)}`}
+                                                                    secondary={`${t.height.toFixed(1)} ft`}
+                                                                    primaryTypographyProps={{ variant: 'caption', color: t.type === 'H' ? 'primary.main' : 'text.secondary' }}
+                                                                    secondaryTypographyProps={{ variant: 'caption' }}
+                                                                />
+                                                            </ListItem>
+                                                        ))}
+                                                    </List>
+                                                </>
+                                            )}
+                                        </Box>
+                                    </Collapse>
                                 </>
                             )}
                         </>
