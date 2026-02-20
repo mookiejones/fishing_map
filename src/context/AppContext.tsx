@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { WeatherAPI } from '../api';
+import { WeatherAPI } from '../api/api';
 import { FishingEngine } from '../engine';
 import { FISHING_SPOTS } from '../spots';
 import { buildConditions } from '../utils';

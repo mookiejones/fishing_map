@@ -17,7 +17,7 @@ import WaterIcon from '@mui/icons-material/Water';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SIDEBAR_WIDTH } from '../theme';
-import { WeatherAPI } from '../api';
+import { WeatherAPI } from '../api/api';
 import { FishingEngine } from '../engine';
 import { useAppContext } from '../context/AppContext';
 import type { SelectedSpecies } from '../types';
