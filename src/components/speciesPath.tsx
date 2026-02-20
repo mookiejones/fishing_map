@@ -1,6 +1,5 @@
 // ── Per-species marker shape ──────────────────────────────────
 import type { Species } from '../types';
-import { APIProvider, Map, Marker, useMap, useApiIsLoaded } from '@vis.gl/react-google-maps';
 
 /**
  * Returns the `google.maps.SymbolPath` shape for a given species.

@@ -78,6 +78,8 @@ interface AppContextValue {
     setShowBoatRamps:       (v: boolean) => void;
     showStructuralBarriers: boolean;
     setShowStructuralBarriers: (v: boolean) => void;
+    showWindOverlay:        boolean;
+    setShowWindOverlay:     (v: boolean) => void;
 
     // User location (from browser Geolocation API)
     userLocation: { lat: number; lng: number } | null;
@@ -120,7 +122,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [showSeagrass, setShowSeagrass]                   = useState<boolean>(false);
     const [showBoatRamps, setShowBoatRamps]                 = useState<boolean>(false);
     const [showStructuralBarriers, setShowStructuralBarriers] = useState<boolean>(false);
-    const [userLocation, setUserLocation]                   = useState<{ lat: number; lng: number } | null>(null);
+    const [showWindOverlay, setShowWindOverlay]               = useState<boolean>(false);
+    const [userLocation, setUserLocation]                     = useState<{ lat: number; lng: number } | null>(null);
     const [sidebarOpen, setSidebarOpen]         = useState<boolean>(true);
 
     // Fetch weather + tides on mount
@@ -188,6 +191,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         showSeagrass,            setShowSeagrass,
         showBoatRamps,           setShowBoatRamps,
         showStructuralBarriers,  setShowStructuralBarriers,
+        showWindOverlay,         setShowWindOverlay,
         userLocation,
         sidebarOpen, setSidebarOpen,
     };

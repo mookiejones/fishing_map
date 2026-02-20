@@ -64,6 +64,7 @@ export default function Sidebar() {
         showSeagrass,   setShowSeagrass,
         showBoatRamps,  setShowBoatRamps,
         showStructuralBarriers, setShowStructuralBarriers,
+        showWindOverlay, setShowWindOverlay,
         sidebarOpen,    setSidebarOpen,
     } = useAppContext();
 
@@ -170,7 +171,19 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#FFB300' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#FFB300 !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">🌉 Structures</Typography>}
+                            label={<Typography variant="caption">🌉 Structures & Reefs</Typography>}
+                            sx={{ m: 0 }}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    size="small"
+                                    checked={showWindOverlay}
+                                    onChange={(_, v) => setShowWindOverlay(v)}
+                                    sx={{ '& .MuiSwitch-thumb': { bgcolor: '#4FC3F7' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#4FC3F7 !important' } }}
+                                />
+                            }
+                            label={<Typography variant="caption">💨 Wind Map</Typography>}
                             sx={{ m: 0 }}
                         />
                     </Stack>

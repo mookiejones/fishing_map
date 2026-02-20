@@ -12,6 +12,7 @@ import type { Species } from '../types';
 import SetupBanner from './SetupBannerComponent';
 import HabitatOverlaysComponent from './HabitatOverlaysComponent';
 import StructuralBarriersComponent from './StructuralBarriersComponent';
+import WindOverlayComponent from './WindOverlayComponent';
 import MAP_STYLES from './mapStyles';
 import { CONFIG } from '../config';
 
@@ -76,7 +77,8 @@ export default function FishingMap() {
 export function MapInner() {
     const {
         scoredSpots, selectedSpot, setSelectedSpot,
-        userLocation, showOysterBeds, showSeagrass, showBoatRamps, showStructuralBarriers,
+        userLocation, showOysterBeds, showSeagrass, showBoatRamps,
+        showStructuralBarriers, showWindOverlay, conditions,
     } = useAppContext();
 
     const loaded = useApiIsLoaded();
@@ -107,8 +109,15 @@ export function MapInner() {
                         fillColor="#00c853"
                         fillOpacity={0.15}
                     />
-                    {/* Structural barriers — causeways, bridges, canals, jetties */}
+                    {/* Structural barriers — causeways, bridges, canals, jetties, reefs, wrecks */}
                     <StructuralBarriersComponent visible={showStructuralBarriers} />
+
+                    {/* Wind direction arrows — grid over IRL and near-coastal area */}
+                    <WindOverlayComponent
+                        visible={showWindOverlay}
+                        windDir={conditions?.windDir ?? 180}
+                        windSpeed={conditions?.windSpeed ?? 0}
+                    />
 
                     {/* Fishing spot markers — one per (spot × species) */}
                     {scoredSpots.map((s: ScoredSpot) => {

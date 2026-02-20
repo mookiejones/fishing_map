@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Paper, Stack } from '@mui/material';
 
 // ── Setup banner (no API key) ─────────────────────────────────

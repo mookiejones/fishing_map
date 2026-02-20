@@ -18,7 +18,7 @@ import processWeather from './processWeather';
 import fetchTides from './fetchTides';
 import processTides from './processTides';
 import weatherInfo from './weatherInfo';
-import fallbackWeather from '././fallbackWeather';
+import fallbackWeather from './fallbackWeather';
 import formatTideTime from './formatTideTime';
 import degToCompass from './degToCompass';
 /**

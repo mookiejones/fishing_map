@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { APIProvider, Map, Marker, useMap, useApiIsLoaded } from '@vis.gl/react-google-maps';
+import { useEffect, useRef } from 'react';
+import { useMap } from '@vis.gl/react-google-maps';
 import type { OverlayPolygon } from '../data/overlays';
 
 // ── Imperative polygon overlay manager ───────────────────────
