@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { FISHING_SPOTS } from './spots';
+import { FISHING_SPOTS } from '../src/spots';
 
-// Brevard County rough bounding box
-const BREVARD_LAT = { min: 27.8, max: 28.97 };
-const BREVARD_LNG = { min: -81.0, max: -80.4 };
-const VALID_SPECIES = ['tarpon', 'snook', 'redfish'] as const;
+const BREVARD_LAT    = { min: 27.8, max: 28.97 };
+const BREVARD_LNG    = { min: -81.0, max: -80.4 };
+const VALID_SPECIES  = ['tarpon', 'snook', 'redfish'] as const;
 const VALID_TIDE_PREFS = ['incoming', 'outgoing'] as const;
 
 describe('FISHING_SPOTS', () => {
@@ -14,14 +13,12 @@ describe('FISHING_SPOTS', () => {
 
     it('all spot IDs are unique', () => {
         const ids = FISHING_SPOTS.map(s => s.id);
-        const unique = new Set(ids);
-        expect(unique.size).toBe(ids.length);
+        expect(new Set(ids).size).toBe(ids.length);
     });
 
     it('all spot names are unique', () => {
         const names = FISHING_SPOTS.map(s => s.name);
-        const unique = new Set(names);
-        expect(unique.size).toBe(names.length);
+        expect(new Set(names).size).toBe(names.length);
     });
 
     FISHING_SPOTS.forEach(spot => {
@@ -41,14 +38,11 @@ describe('FISHING_SPOTS', () => {
 
             it('has at least one valid species', () => {
                 expect(spot.species.length).toBeGreaterThan(0);
-                spot.species.forEach(s => {
-                    expect(VALID_SPECIES).toContain(s);
-                });
+                spot.species.forEach(s => expect(VALID_SPECIES).toContain(s));
             });
 
             it('has no duplicate species', () => {
-                const unique = new Set(spot.species);
-                expect(unique.size).toBe(spot.species.length);
+                expect(new Set(spot.species).size).toBe(spot.species.length);
             });
 
             it('has a valid tidePreference', () => {
@@ -57,9 +51,7 @@ describe('FISHING_SPOTS', () => {
 
             it('has at least one fishing tip', () => {
                 expect(spot.tips.length).toBeGreaterThan(0);
-                spot.tips.forEach(tip => {
-                    expect(tip.trim().length).toBeGreaterThan(0);
-                });
+                spot.tips.forEach(tip => expect(tip.trim().length).toBeGreaterThan(0));
             });
 
             it('has at least one habitat feature', () => {

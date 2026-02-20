@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { OYSTER_BEDS, SEAGRASS_BEDS } from './overlays';
-import type { OverlayPolygon } from './overlays';
+import type { OverlayPolygon } from '../../src/data/overlays';
 
-// Brevard County rough bounding box (same as spots.test.ts)
 const BREVARD_LAT = { min: 27.8, max: 28.97 };
 const BREVARD_LNG = { min: -81.0, max: -80.4 };
 
-function validateOverlayArray(overlays: OverlayPolygon[], label: string) {
+export function validateOverlayArray(overlays: OverlayPolygon[], label: string) {
     describe(label, () => {
         it('is non-empty', () => {
             expect(overlays.length).toBeGreaterThan(0);
@@ -52,14 +50,3 @@ function validateOverlayArray(overlays: OverlayPolygon[], label: string) {
         });
     });
 }
-
-validateOverlayArray(OYSTER_BEDS,   'OYSTER_BEDS');
-validateOverlayArray(SEAGRASS_BEDS, 'SEAGRASS_BEDS');
-
-describe('combined overlay data', () => {
-    it('OYSTER_BEDS and SEAGRASS_BEDS have no overlapping IDs', () => {
-        const oysterIds   = new Set(OYSTER_BEDS.map(o => o.id));
-        const seagrassIds = SEAGRASS_BEDS.map(o => o.id);
-        seagrassIds.forEach(id => expect(oysterIds.has(id)).toBe(false));
-    });
-});
