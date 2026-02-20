@@ -11,6 +11,34 @@
                 "/*": "${workspaceFolder}/src/*"
             },
             "preLaunchTask": "npm: dev"
+        },
+        {
+            "name": "Debug Tests (Vitest)",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "vitest",
+                "--run",
+                "--reporter=verbose"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Debug Current Test File",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "runtimeArgs": [
+                "vitest",
+                "--run",
+                "${relativeFile}"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
