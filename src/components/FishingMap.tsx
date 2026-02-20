@@ -3,19 +3,46 @@
 //   user location, and habitat overlays (oyster / seagrass)
 // ============================================================
 
-import { APIProvider, Map, Marker, useApiIsLoaded ,AdvancedMarker} from '@vis.gl/react-google-maps';
+import { APIProvider, Map, Marker, useApiIsLoaded } from '@vis.gl/react-google-maps';
 import { useAppContext } from '../context/AppContext';
 import { OYSTER_BEDS, SEAGRASS_BEDS } from '../data/overlays';
 import { BOAT_RAMPS } from '../data/boatRamps';
 import type { ScoredSpot } from '../context/AppContext';
+import type { Species } from '../types';
 import SetupBanner from './SetupBannerComponent';
 import HabitatOverlaysComponent from './HabitatOverlaysComponent';
 import MAP_STYLES from './mapStyles';
 import { CONFIG } from '../config';
-import speciesPath from './speciesPath';
-
 
 const PLACEHOLDER_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+
+/** Body fill color per species — differentiates fish icons on the map. */
+const SPECIES_COLOR: Record<Species, string> = {
+    tarpon:  '#FFD700',   // gold
+    snook:   '#00b4d8',   // teal
+    redfish: '#FF6B35',   // orange
+};
+
+/**
+ * Builds a data-URI SVG fish icon.
+ * @param bodyColor   - Fill color for the fish body (encodes species).
+ * @param strokeColor - Outline color (encodes fishing rating, or white when selected).
+ * @param w           - Rendered icon width in pixels.
+ * @param h           - Rendered icon height in pixels.
+ */
+function fishIconUrl(bodyColor: string, strokeColor: string, w: number, h: number): string {
+    const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" width="${w}" height="${h}">` +
+        // Forked tail
+        `<polygon points="4,12 11,5 11,19" fill="${bodyColor}"/>` +
+        // Body ellipse — stroke encodes rating
+        `<ellipse cx="22" cy="12" rx="13" ry="8" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="2"/>` +
+        // Eye
+        `<circle cx="30" cy="10" r="2.2" fill="white"/>` +
+        `<circle cx="30.5" cy="10" r="1.1" fill="#222"/>` +
+        `</svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
 /**
  * Top-level map component.
@@ -84,13 +111,11 @@ export function MapInner() {
                         const isSelected = selectedSpot?.spot.id === spot.id &&
                                            selectedSpot?.species === species;
 
-                        const icon: google.maps.Symbol = {
-                            path:         speciesPath(species),
-                            fillColor:    result.color,
-                            fillOpacity:  0.9,
-                            strokeColor:  isSelected ? '#ffffff' : result.color,
-                            strokeWeight: isSelected ? 3 : 1.5,
-                            scale:        isSelected ? 14 : 11,
+                        const [w, h] = isSelected ? [48, 32] : [36, 24];
+                        const icon: google.maps.Icon = {
+                            url:        fishIconUrl(SPECIES_COLOR[species], isSelected ? '#ffffff' : result.color, w, h),
+                            scaledSize: new google.maps.Size(w, h),
+                            anchor:     new google.maps.Point(w / 2, h / 2),
                         };
 
                         return (
