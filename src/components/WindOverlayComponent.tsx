@@ -160,10 +160,13 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
         function frame(): void {
             animId = requestAnimationFrame(frame);
 
-            // Trail fade: semi-transparent fill with map background color.
-            // Lower alpha = longer trails (nullschool uses ~0.05–0.12).
-            ctx.fillStyle = 'rgba(7,18,32,0.10)';
+            // Trail fade: use destination-out so we reduce existing pixel alpha
+            // rather than painting an opaque dark color over the transparent canvas.
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.globalAlpha = 0.07;
             ctx.fillRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
 
             ctx.lineWidth = 1.5;
 
