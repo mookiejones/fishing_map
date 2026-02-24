@@ -1,7 +1,7 @@
 // ============================================================
 // WindOverlayComponent.tsx — Animated particle wind overlay
 //   Renders flowing streamlines on a canvas, earth.nullschool
-//   style: dark background, speed-colored trails, fade in/out.
+//   style: speed-colored trails with fade in/out.
 // ============================================================
 // Color scale (mph):  0=navy · 8=blue · 15=cyan · 25=green
 //                    35=gold · 50=orange · 80+=red
@@ -22,15 +22,22 @@ interface Props {
     windSpeed: number;
 }
 
+interface TrailPoint {
+    x: number;
+    y: number;
+}
+
 interface Particle {
     x:      number;
     y:      number;
     age:    number;
     maxAge: number;
     speed:  number;
+    trail:  TrailPoint[];
 }
 
 const PARTICLE_COUNT = 300;
+const TRAIL_LENGTH   = 24; // stored positions per particle
 
 // ── Color helpers ─────────────────────────────────────────────
 
@@ -78,13 +85,15 @@ function windColor(mph: number): string {
  * over the Google Map div.  Particles stream in the direction the
  * wind is blowing, with fade-in/out trails and speed-coded color.
  *
- * The canvas animation runs continuously; visibility is toggled
- * via `display` CSS so the animation stays warm on re-enable.
+ * Each frame the canvas is fully cleared and all particle trails
+ * are redrawn.  This is correct for a transparent overlay canvas —
+ * trail persistence is achieved by storing the last TRAIL_LENGTH
+ * positions per particle and drawing them with increasing opacity.
  *
  * Must be mounted inside an `<APIProvider>` + `<Map>` context.
  */
 export default function WindOverlayComponent({ visible, windDir, windSpeed }: Props) {
-    const map      = useMap();
+    const map       = useMap();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // ── Main effect — restart when wind conditions change ─────
@@ -124,6 +133,7 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
             p.maxAge = 80 + Math.random() * 200;
             p.speed  = baseSpeed * (0.55 + Math.random() * 0.9);
             p.age    = staggerAge ? Math.floor(Math.random() * p.maxAge) : 0;
+            p.trail  = [];
 
             // 30% of particles enter from the upwind edge for natural flow
             if (Math.random() < 0.3) {
@@ -147,7 +157,7 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
             canvas.height = h;
             particles.length = 0;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const p: Particle = { x: 0, y: 0, age: 0, maxAge: 200, speed: 0 };
+                const p: Particle = { x: 0, y: 0, age: 0, maxAge: 200, speed: 0, trail: [] };
                 respawn(p, true); // staggered ages → immediate density on load
             }
         }
@@ -160,15 +170,13 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
         function frame(): void {
             animId = requestAnimationFrame(frame);
 
-            // Trail fade: use destination-out so we reduce existing pixel alpha
-            // rather than painting an opaque dark color over the transparent canvas.
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.globalAlpha = 0.07;
-            ctx.fillRect(0, 0, w, h);
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.globalAlpha = 1;
+            // Clear canvas each frame — trail persistence is handled
+            // by the per-particle trail array, not canvas accumulation.
+            // This is the correct approach for a transparent overlay canvas.
+            ctx.clearRect(0, 0, w, h);
 
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = 1.5;
 
             for (const p of particles) {
                 // Slight turbulence perpendicular to flow for organic feel
@@ -178,19 +186,37 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
                 const ny    = p.y + (uy + turb * ux) * speed;
 
                 // Fade in over first 10% of life, fade out over last 20%
-                const t     = p.age / p.maxAge;
-                const alpha = t < 0.10
+                const t            = p.age / p.maxAge;
+                const particleAlpha = t < 0.10
                     ? t / 0.10
                     : t > 0.80
                         ? (1 - t) / 0.20
                         : 1;
 
-                ctx.globalAlpha  = alpha * 0.78;
-                ctx.strokeStyle  = color;
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(nx, ny);
-                ctx.stroke();
+                // Draw stored trail segments with opacity fading toward the tail
+                const pts = p.trail;
+                for (let i = 1; i < pts.length; i++) {
+                    // fraction: 0 = oldest segment (tail), 1 = newest (head)
+                    const fraction = i / pts.length;
+                    ctx.globalAlpha = fraction * particleAlpha * 0.82;
+                    ctx.beginPath();
+                    ctx.moveTo(pts[i - 1]!.x, pts[i - 1]!.y);
+                    ctx.lineTo(pts[i]!.x,     pts[i]!.y);
+                    ctx.stroke();
+                }
+
+                // Draw the current (newest) segment at full particle alpha
+                if (pts.length > 0) {
+                    ctx.globalAlpha = particleAlpha * 0.82;
+                    ctx.beginPath();
+                    ctx.moveTo(pts[pts.length - 1]!.x, pts[pts.length - 1]!.y);
+                    ctx.lineTo(nx, ny);
+                    ctx.stroke();
+                }
+
+                // Advance particle state
+                p.trail.push({ x: p.x, y: p.y });
+                if (p.trail.length > TRAIL_LENGTH) p.trail.shift();
 
                 p.x = nx;
                 p.y = ny;
