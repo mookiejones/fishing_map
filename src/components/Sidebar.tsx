@@ -85,7 +85,7 @@ export default function Sidebar() {
             borderColor: 'divider',
         }}>
             {/* Content wrapper keeps layout stable during animation */}
-            <Box sx={{ width: SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+            <Box sx={{ width: SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0 }}>
 
                 {/* ── Collapse button ───────────────────── */}
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 0.5 }}>
@@ -192,7 +192,7 @@ export default function Sidebar() {
                 <Divider />
 
                 {/* ── Day cards + conditions ────────────── */}
-                <Box sx={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     {weatherDays.length === 0 ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
                             <CircularProgress size={28} />
