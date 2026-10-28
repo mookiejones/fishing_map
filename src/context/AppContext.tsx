@@ -121,7 +121,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [showStructuralBarriers, setShowStructuralBarriers] = useState<boolean>(false);
     const [showWindOverlay, setShowWindOverlay]               = useState<boolean>(false);
     const [userLocation, setUserLocation]                     = useState<{ lat: number; lng: number } | null>(null);
-    const [sidebarOpen, setSidebarOpen]         = useState<boolean>(true);
+    const [sidebarOpen, setSidebarOpen] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia('(min-width:600px)').matches,
+    );
 
     // Fetch weather + tides on mount
     useEffect(() => {

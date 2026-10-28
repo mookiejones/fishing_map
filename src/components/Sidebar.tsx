@@ -15,7 +15,7 @@ import ThermostatIcon from '@mui/icons-material/Thermostat';
 import CompressIcon from '@mui/icons-material/Compress';
 import WaterIcon from '@mui/icons-material/Water';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { SIDEBAR_WIDTH } from '../theme';
@@ -54,7 +54,8 @@ function ratingChipColor(rating: string): 'success' | 'warning' | 'error' | 'def
  * - Current day conditions (wind, temp, pressure, precip)
  * - Tide schedule for Port Canaveral
  */
-export default function Sidebar() {
+export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) {
+    const isSheet = mode === 'sheet';
     const {
         weatherDays, tidesByDate,
         selectedDay, setSelectedDay,
@@ -77,25 +78,28 @@ export default function Sidebar() {
 
     return (
         <Box sx={{
-            width:       sidebarOpen ? SIDEBAR_WIDTH : 0,
-            minWidth:    sidebarOpen ? SIDEBAR_WIDTH : 0,
+            width:       isSheet ? '100%' : (sidebarOpen ? SIDEBAR_WIDTH : 0),
+            minWidth:    isSheet ? 0 : (sidebarOpen ? SIDEBAR_WIDTH : 0),
+            height:      isSheet ? '100%' : 'auto',
+            maxHeight:   isSheet ? '85vh' : 'none',
             overflow:    'hidden',
             transition:  'width 0.25s ease, min-width 0.25s ease',
             position:    'relative',
             display:     'flex',
             flexDirection: 'column',
             bgcolor:     'background.default',
-            borderRight: '1px solid',
+            borderRight: isSheet ? 'none' : '1px solid',
             borderColor: 'divider',
         }}>
-            {/* Content wrapper keeps layout stable during animation */}
-            <Box sx={{ width: SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+            <Box sx={{ width: isSheet ? '100%' : SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0 }}>
 
-                {/* ── Collapse button ───────────────────── */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 0.5 }}>
-                    <Tooltip title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'} placement="right">
-                        <IconButton size="small" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                            <ChevronLeftIcon fontSize="small" />
+                <Box sx={{ display: 'flex', justifyContent: isSheet ? 'space-between' : 'flex-end', alignItems: 'center', px: 1, py: 0.5 }}>
+                    {isSheet && (
+                        <Typography variant="caption" color="text.secondary">FORECAST</Typography>
+                    )}
+                    <Tooltip title={isSheet ? 'Close' : 'Collapse sidebar'} placement="right">
+                        <IconButton size="small" onClick={() => setSidebarOpen(false)} aria-label={isSheet ? 'Close forecast' : 'Collapse sidebar'}>
+                            {isSheet ? <CloseIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
                         </IconButton>
                     </Tooltip>
                 </Box>
@@ -113,6 +117,7 @@ export default function Sidebar() {
                         onChange={(_, v) => v && setSelectedSpecies(v as SelectedSpecies)}
                         size="small"
                         fullWidth
+                        sx={{ flexWrap: 'wrap' }}
                     >
                         {SPECIES_OPTIONS.map(o => (
                             <ToggleButton key={o.value} value={o.value} sx={{ fontSize: 11 }}>

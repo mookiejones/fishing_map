@@ -24,7 +24,11 @@ export default function TopBar() {
     return (
         <AppBar position="static" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider', zIndex: t => t.zIndex.drawer + 1 }}>
             <Toolbar variant="dense" sx={{ gap: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 0.5, flex: 1 }}>
+                <Typography
+                    variant="h6"
+                    noWrap
+                    sx={{ fontWeight: 700, letterSpacing: 0.5, flex: 1, minWidth: 0, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                >
                     🎣 Brevard County Fishing Hotspots
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

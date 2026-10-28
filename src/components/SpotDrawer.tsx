@@ -70,8 +70,10 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                 paper: {
                     sx: {
                         left:         sidebarWidth,
+                        right:        0,
+                        width:        'auto',
                         borderRadius: '12px 12px 0 0',
-                        maxHeight:    '55vh',
+                        maxHeight:    { xs: '70vh', sm: '55vh' },
                         overflow:     'auto',
                         bgcolor:      'background.paper',
                         border:       '1px solid',
