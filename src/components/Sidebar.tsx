@@ -81,7 +81,8 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
             width:       isSheet ? '100%' : (sidebarOpen ? SIDEBAR_WIDTH : 0),
             minWidth:    isSheet ? 0 : (sidebarOpen ? SIDEBAR_WIDTH : 0),
             height:      isSheet ? '100%' : 'auto',
-            maxHeight:   isSheet ? '85vh' : 'none',
+            minHeight:   0,
+            flex:        isSheet ? 1 : 'none',
             overflow:    'hidden',
             transition:  'width 0.25s ease, min-width 0.25s ease',
             position:    'relative',
@@ -117,7 +118,6 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
                         onChange={(_, v) => v && setSelectedSpecies(v as SelectedSpecies)}
                         size="small"
                         fullWidth
-                        sx={{ flexWrap: 'wrap' }}
                     >
                         {SPECIES_OPTIONS.map(o => (
                             <ToggleButton key={o.value} value={o.value} sx={{ fontSize: 11 }}>

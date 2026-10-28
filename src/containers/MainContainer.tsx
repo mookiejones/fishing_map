@@ -36,7 +36,10 @@ function MainContainer() {
                         slotProps={{
                             paper: {
                                 sx: {
+                                    height: '85vh',
                                     maxHeight: '85vh',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                     bgcolor: 'background.default',
                                     borderRadius: '12px 12px 0 0',
                                     border: '1px solid',
