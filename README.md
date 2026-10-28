@@ -6,17 +6,17 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-0969da?logo=github)](https://mookiejones.github.io/fishing_map/)
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 
-[![MUI](https://img.shields.io/badge/MUI-v5-007FFF?logo=mui&logoColor=white)](https://mui.com/)
+[![MUI](https://img.shields.io/badge/MUI-9-007FFF?logo=mui&logoColor=white)](https://mui.com/)
 
-[![Tested with Vitest](https://img.shields.io/badge/Vitest-261%20tests-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Tested with Vitest](https://img.shields.io/badge/Tested%20with-Vitest-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
 
-An interactive fishing map for **Brevard County, Florida** targeting Tarpon, Snook, and Redfish. It combines a 7-day weather forecast, NOAA tide predictions, and a 100-point scoring engine to surface the best spots and windows each day.
+An interactive fishing map for **Brevard County, Florida** — Indian River Lagoon, Banana River, and the Cocoa Beach inlets — targeting tarpon, snook, redfish, black drum, and speckled trout. It scores dawn and dusk from an hourly forecast and NOAA tide predictions.
 
 **Live app:** https://mookiejones.github.io/fishing_map/
 
@@ -24,13 +24,13 @@ An interactive fishing map for **Brevard County, Florida** targeting Tarpon, Sno
 
 ## Features
 
-- **7-day forecast panel** — wind, pressure, precipitation, and tide overview for each day
-- **Scored map markers** — each hotspot scored 0–100 and color-coded (green → red) based on current conditions
-- **Per-species filtering** — toggle between Tarpon (▲), Snook (●), Redfish (▼), or view all
-- **Tide integration** — NOAA hi-lo tide schedule; dawn/dusk prime windows boosted in scoring
-- **Habitat overlays** — toggle oyster beds and seagrass beds on the map
-- **Spot drawer** — tap any marker for score breakdown, best fishing window, tips, and habitat notes
-- **No backend** — weather data from [Open-Meteo](https://open-meteo.com) (free, no key), tides from [NOAA CO-OPS](https://tidesandcurrents.noaa.gov) (free, no key)
+- **Scored map markers** — each hotspot scored 0–100 at dawn and at dusk. The better window wins. Color is the rating
+- **Per-species filtering** — tarpon, snook, redfish, black drum, speckled trout, or all
+- **Tide integration** — NOAA hi-lo for Trident Pier (8721604) in local daylight time. Incoming is the rise into high water. Outgoing is the fall into low water. Microtidal flats are not scored as if they had the ocean range
+- **Habitat overlays** — oyster and seagrass polygons, labeled as hand-drawn approximations
+- **Phone layout** — the map is the whole screen. Forecast and species open in a bottom sheet
+- **Spot drawer** — score breakdown, the scored window, and local tips
+- **No backend** — weather from [Open-Meteo](https://open-meteo.com) (precipitation in inches), tides from [NOAA CO-OPS](https://tidesandcurrents.noaa.gov)
 
 ---
 
@@ -48,7 +48,9 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-On first load the app shows a setup banner — enter your Google Maps API key to display the map. The key is saved to `localStorage` and never leaves your browser.
+On first load the app shows a setup banner. Enter a Google Maps JavaScript API key. It is saved in `localStorage` under `fishing_map_gkey`.
+
+Restrict the key by HTTP referrer in Google Cloud. The Pages build inlines `VITE_GOOGLE_MAPS_API_KEY` into the public bundle, so an unrestricted key can be copied from the site. Allow the Pages origin and `http://localhost:5173/*` for local development. Open-Meteo and NOAA do not need keys.
 
 ### Build for production
 
@@ -61,26 +63,29 @@ npm run preview  # preview the production build locally
 
 ## Scoring Engine
 
-Each spot is scored out of **100 points** per day:
+Each spot is scored out of **100** (the parts sum to 115 and the total is capped):
 
 | Factor | Max | Notes |
 |--------|-----|-------|
-| Wind speed | 25 | Lower wind = better sight-fishing |
-| Barometric pressure | 25 | Rising high pressure = active feeding |
-| Tides | 30 | Preferred tide type + dawn/dusk alignment |
-| Temperature | 20 | Species-specific thermal comfort range |
+| Wind speed | 25 | Lower wind scores higher. Dawn and dusk use the hourly mean, not the daily max |
+| Wind direction | 10 | East to southeast is best on the flats. A northeast sea breeze is not a north wind |
+| Barometric pressure | 25 | Level plus the change at 08:00 versus yesterday. The normal afternoon dip is not a front |
+| Water movement | 20 | Preferred moving tide, weighted by `tideRegime`. Height is ignored. Micro flats (Mosquito Lagoon) cap the tide share at 4 |
+| Cold front | 10 | Falling pressure plus a northwest or north wind |
+| Temperature | 20 | Species comfort, from the window's air temperature minus 3°F as a water proxy |
+| Precipitation | 5 | Inches. Rain outside the scored window does not count against it |
 
-Ratings: **Excellent** ≥78 · **Good** ≥57 · **Fair** ≥37 · **Poor** <37
+The day chip is the median of those same spot scores. Thresholds: **Excellent** ≥78 · **Good** ≥57 · **Fair** ≥37 · **Poor** <37.
 
 ---
 
 ## Tech Stack
 
-- [React 18](https://react.dev) + [TypeScript](https://www.typescriptlang.org)
-- [Material-UI v5](https://mui.com) (dark nautical theme)
-- [Vite 5](https://vitejs.dev) (build + HMR)
-- [@vis.gl/react-google-maps](https://visgl.github.io/react-google-maps/) for map rendering
-- [Vitest](https://vitest.dev) + jsdom for unit tests (261 tests across 5 suites)
+- [React 19](https://react.dev) + [TypeScript 6](https://www.typescriptlang.org)
+- [Material UI 9](https://mui.com)
+- [Vite 8](https://vitejs.dev)
+- [@vis.gl/react-google-maps](https://visgl.github.io/react-google-maps/)
+- [Vitest](https://vitest.dev) + jsdom
 
 ---
 
@@ -88,10 +93,13 @@ Ratings: **Excellent** ≥78 · **Good** ≥57 · **Fair** ≥37 · **Poor** <37
 
 ```
 src/
-├── engine.ts            # 100-point scoring logic
-├── api/                 # Open-Meteo + NOAA fetch + processing (one file per function)
-├── spots.ts             # 14 hardcoded Brevard County hotspots
-├── config.ts            # API key (env var / localStorage) + constants
+├── engine.ts            # rateSpot and the shared score
+├── engine/rateDay.ts    # day-card median
+├── engine/tidePhase.ts  # incoming and outgoing limbs
+├── api/                 # Open-Meteo + NOAA, one file per function
+├── spots.ts             # 14 Brevard County hotspots
+├── time/forecastDates.ts
+├── config.ts            # API key and station 8721604
 ├── utils.ts             # buildConditions(), capitalize()
 ├── types.ts             # Shared TypeScript types
 ├── theme.ts             # MUI dark theme
@@ -117,7 +125,7 @@ npm run test:run   # run all tests once
 npm run test       # watch mode
 ```
 
-261 tests covering the scoring engine, API data processing, utility functions, and all spot/overlay data.
+Vitest covers scoring, tide phase, dawn and dusk windows, and partial fetch fallbacks.
 
 ---
 

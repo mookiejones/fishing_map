@@ -30,13 +30,13 @@ Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts
 
 ```
 AppProvider (src/context/AppContext.tsx)
-  ├── fetches Open-Meteo weather + NOAA tide data on mount (WeatherAPI)
+  ├── fetches Open-Meteo (hourly dawn/dusk windows) and NOAA tides on mount
   ├── requests browser geolocation on mount
-  ├── derives `conditions` (DayConditions) from selected day's WeatherDay + tides
-  ├── derives `scoredSpots` (ScoredSpot[]) by running FishingEngine.rateSpot
-  │     per (spot × species) pair — one marker per species when "all" is selected,
-  │     with small lat/lng offsets so markers don't stack
+  ├── scores each spot at dawn and dusk with FishingEngine.rateSpot and keeps the better window
+  ├── day cards use rateDay, the median of those same rateSpot scores
   └── exposes everything via useAppContext()
+
+On screens under 600px the forecast is a bottom sheet (MainContainer). Wider screens dock the sidebar.
 
 App.tsx          — layout shell only; reads sidebarOpen from context
   ├── TopBar     — reads dataStatus
@@ -51,13 +51,16 @@ All components call `useAppContext()` directly — no prop drilling.
 
 | File | Purpose |
 |---|---|
-| `src/engine.ts` | `FishingEngine` — 100pt scoring: Wind(25) + Pressure(25) + Tides(30) + Temp(20). Rating thresholds: ≥78 excellent, ≥57 good, ≥37 fair |
-| `src/api.ts` | `WeatherAPI` — Open-Meteo (weather/pressure) + NOAA CO-OPS hi-lo tides. Both free, no auth. Fallback data used when APIs fail |
-| `src/spots.ts` | `FISHING_SPOTS` — 14 hardcoded Brevard County spots with species, tidePreference, tips |
-| `src/data/overlays.ts` | `OYSTER_BEDS` + `SEAGRASS_BEDS` — approximate polygon coordinates for map overlays |
-| `src/data/boatRamps.ts` | `BOAT_RAMPS` — 12 public boat ramp point locations (lat/lng) for Brevard County |
-| `src/config.ts` | `CONFIG` — API key (reads `localStorage` key `fishing_map_gkey`), map center, NOAA station, weather coords |
-| `src/utils.ts` | `buildConditions()` — assembles `DayConditions` from `WeatherDay` + tides |
+| `src/engine.ts` | `FishingEngine` — up to 115 points, capped at 100: wind 25, pressure 25, water movement 20, temperature 20, wind direction 10, cold front 10, precipitation 5. Thresholds: ≥78 excellent, ≥57 good, ≥37 fair |
+| `src/engine/rateDay.ts` | Day-card score. Median of `rateSpot` at dawn and dusk |
+| `src/engine/tidePhase.ts` | Incoming is low→high. Outgoing is high→low |
+| `src/api/` | Open-Meteo (inches, hourly) and NOAA CO-OPS `lst_ldt` tides for station 8721604. A failed feed does not replace the other |
+| `src/spots.ts` | 14 Brevard spots with species, tide preference, and tide regime (`micro`, `lagoon`, `inlet`) |
+| `src/data/overlays.ts` | Hand-drawn oyster and seagrass polygons. The UI labels them approximate |
+| `src/data/boatRamps.ts` | Public boat ramps. Bairs Cove is the Haulover ramp. Oars & Paddles is the launch beside Dragon Point |
+| `src/config.ts` | Maps key (`localStorage` `fishing_map_gkey` or `VITE_GOOGLE_MAPS_API_KEY`), map center, NOAA station, weather coords |
+| `src/utils/conditionsForWindow.ts` | Builds `DayConditions` for a dawn or dusk window |
+| `src/time/forecastDates.ts` | Local `America/New_York` date keys. Do not use `toISOString()` for the fishing day |
 | `src/theme.ts` | MUI dark nautical theme + `SIDEBAR_WIDTH = 320` |
 | `src/types.ts` | All shared TypeScript types and interfaces |
 
@@ -65,17 +68,16 @@ All components call `useAppContext()` directly — no prop drilling.
 
 Uses `@vis.gl/react-google-maps` v1.5.x. Important: **`Polygon` is not exported** by this package version — habitat overlays are implemented imperatively via `google.maps.Polygon` inside `HabitatOverlaysComponent.tsx` using `useMap()` + `useRef`. Map markers only render after `useApiIsLoaded()` returns true.
 
-Species marker shapes:
-- Tarpon → `FORWARD_CLOSED_ARROW` (▲), Snook → `CIRCLE` (●), Redfish → `BACKWARD_CLOSED_ARROW` (▼)
-- Marker **color** encodes fishing rating (green/yellow/orange/red); **shape** encodes species
+Species markers are small fish icons. Color is the rating. The species is the icon color (`SPECIES_COLOR` in `FishingMap.tsx`). When every species is shown, markers are offset by at most ~120 m (`src/map/speciesMarkerOffset.ts`).
 
-`src/components/FishingMap.tsx` imports from split-out helpers:
+`src/components/FishingMap.tsx` imports:
 - `mapStyles.tsx` — dark nautical `MAP_STYLES` array
-- `speciesPath.tsx` — maps `Species` → `google.maps.SymbolPath`
-- `HabitatOverlaysComponent.tsx` — imperative polygon lifecycle (create on map-ready, toggle visibility)
+- `HabitatOverlaysComponent.tsx` — imperative polygon lifecycle
 - `SetupBannerComponent.tsx` — shown when no valid API key
 
-`src/containers/FisingMapContainer.tsx` (note: typo in filename) is an alternate container wrapping `MapInner` + `SetupBanner`.
+`WindOverlayComponent.tsx` is the particle wind layer. Another branch owns that file. Do not restyle or rewrite it here. It receives the scored window's wind speed and direction through props.
+
+`src/vite-env.d.ts` references `@types/google.maps`. TypeScript 6 does not load that package unless a source file references it.
 
 ### GitHub Pages deployment
 
@@ -85,4 +87,4 @@ To activate for a new fork: **Settings → Pages → Source → GitHub Actions**
 
 ### API key flow
 
-Read at startup from `localStorage.getItem('fishing_map_gkey')`, falling back to the value hardcoded in `src/config.ts`. Users can enter a key in the `SetupBanner` without reloading — it is saved to `localStorage` and `APIProvider` re-mounts with the new key. Open-Meteo and NOAA require no keys.
+Read at startup from `localStorage.getItem('fishing_map_gkey')`, then `VITE_GOOGLE_MAPS_API_KEY`. The setup banner saves a key without a reload and `APIProvider` remounts. If the Pages workflow injects `VITE_GOOGLE_MAPS_API_KEY`, that key is inside the public JavaScript bundle. Restrict it by HTTP referrer in Google Cloud (the Pages origin and `http://localhost:5173/*` for development). Open-Meteo and NOAA require no keys.
