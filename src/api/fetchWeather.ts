@@ -23,6 +23,9 @@ const fetchWeather= async(): Promise<WeatherDay[]> =>{
             forecast_days: String(CONFIG.FORECAST_DAYS),
             wind_speed_unit:  'mph',
             temperature_unit: 'fahrenheit',
+            // Open-Meteo defaults to millimetres. The scorer and the sidebar
+            // both treat this value as inches.
+            precipitation_unit: 'inch',
             daily: [
                 'temperature_2m_max',
                 'temperature_2m_min',
