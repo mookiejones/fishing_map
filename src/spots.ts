@@ -22,6 +22,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'One of the most celebrated sight-fishing destinations in the world. Crystal-clear, ultra-shallow grass flats hold world-class redfish year-round. Strict no-wake zones preserve pristine conditions.',
         features: ['flats', 'grass', 'shallow', 'sight-fishing'],
         tidePreference: 'incoming',
+        tideRegime: 'micro',
         tips: [
             'Best on incoming tide with 12–18 inches of water over the grass',
             'Sight-cast to tailing or pushing reds in low-light hours',
@@ -39,6 +40,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A strong tidal canal connecting Mosquito Lagoon to the Indian River Lagoon. Famous for heavy concentrations of redfish on every tide change and migrating tarpon in spring and fall.',
         features: ['canal', 'tidal-current', 'bridge', 'structure'],
         tidePreference: 'outgoing',
+        tideRegime: 'inlet',
         tips: [
             'Fish bridge pilings on outgoing tide — snook and reds lock in the current breaks',
             'Large tarpon migrate through spring and fall; live mullet or big swimbaits work',
@@ -55,6 +57,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'The bridge spanning the Indian River near the Kennedy Space Center. Deep structure and strong tidal flow make this a go-to for all three species, particularly at night under the bridge lights.',
         features: ['bridge', 'deep-water', 'tidal-current', 'night-fishing'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Night fishing under bridge lights is exceptional for trophy snook',
             'Summer tarpon pile up under the span; live threadfin shad are top bait',
@@ -71,6 +74,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'Expansive seagrass flats stretching along the western shore of the Indian River near Titusville. Consistent year-round redfish and snook action with excellent sight-fishing opportunities.',
         features: ['flats', 'grass', 'shallow', 'wade-fishing'],
         tidePreference: 'incoming',
+        tideRegime: 'micro',
         tips: [
             'Incoming tide pushes fish onto the flats — be there early',
             'Look for nervous water, wakes, or tailing fish',
@@ -87,6 +91,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A premier sportfishing inlet with powerful tidal flows that concentrate baitfish and predators. World-class tarpon action from May through August and consistent snook fishing year-round off the jetty rocks.',
         features: ['inlet', 'jetty', 'deep-water', 'ocean-access', 'tidal-current'],
         tidePreference: 'outgoing',
+        tideRegime: 'inlet',
         tips: [
             'Tarpon school in the inlet May–August, peaking near new and full moons',
             'Live pilchards, threadfin shad, and large swimbaits are top producers',
@@ -103,6 +108,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'Protected waters inside Cape Canaveral with extensive oyster bars, scattered grass flats, and minimal boat traffic. Excellent wade fishing and kayak destination with good numbers of both redfish and snook.',
         features: ['flats', 'oyster-bars', 'protected', 'kayak-friendly'],
         tidePreference: 'incoming',
+        tideRegime: 'lagoon',
         tips: [
             'Oyster bars are prime ambush points for snook and redfish year-round',
             'Wade fishing is extremely effective in this area',
@@ -119,6 +125,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'The Banana River holds productive grass flats, and portions are designated No-Motor Zones, keeping them pristine. Schools of snook and redfish are abundant, and juvenile tarpon frequent the area in summer.',
         features: ['flats', 'grass', 'no-motor-zone', 'kayak-friendly'],
         tidePreference: 'incoming',
+        tideRegime: 'micro',
         tips: [
             'No-Motor Zones require kayak or push-pole — worth every paddle stroke',
             'Snook and reds are abundant with minimal fishing pressure',
@@ -135,6 +142,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A productive tidal creek with good mangrove habitat near Merritt Island. Resident snook and redfish year-round, with excellent current action on outgoing tides.',
         features: ['creek', 'mangroves', 'structure', 'sheltered'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Cast tight to mangrove roots and let your lure sink in the shadow',
             'Small paddle tail jigs and DOA shrimp work great in the current',
@@ -151,6 +159,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'Where the Eau Gallie River meets the Indian River Lagoon. Dock structure, strong tidal flow, and bridge lights make this a reliable spot for trophy snook and seasonal tarpon.',
         features: ['river-mouth', 'docks', 'tidal-current', 'night-fishing'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Dock lights concentrate snook at night — work the shadow lines',
             'Tarpon show up in summer chasing mullet near the river mouth',
@@ -167,6 +176,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'Classic Florida bridge fishing at its finest. The US-192 causeway spans the Indian River at Melbourne with powerful lights that attract baitfish — and the snook that crush them — throughout the night.',
         features: ['bridge', 'bridge-lights', 'structure', 'night-fishing'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Night fishing under bridge lights is legendary — arrive before dark',
             'Position downcurrent of the pilings and work the shadow edge',
@@ -183,6 +193,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A prominent point on the Indian River south of Melbourne with rocky bottom and scattered oyster bars. The point creates a current seam that concentrates fish on falling tides.',
         features: ['point', 'rock-structure', 'oyster-bars', 'current-seam'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'The point funnels current and bait — fish it hard on outgoing tide',
             'Rocky structure holds snook that are tough to pull off the bottom',
@@ -199,6 +210,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A scenic, tannic tidal creek with excellent mangrove habitat and surprisingly good fishing. Resident snook and redfish year-round, and excellent paddleboard or kayak access.',
         features: ['creek', 'mangroves', 'tannic-water', 'kayak-friendly', 'backcountry'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Work topwater plugs through mangrove pockets at first light',
             'Red-and-white bucktail jigs work year-round in the tea-colored water',
@@ -215,6 +227,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'The old US-192 bridge near Melbourne offers structure, lights, and strong tidal flow. A consistent night-fishing destination for snook, with tarpon appearances from spring through fall.',
         features: ['bridge', 'bridge-lights', 'structure', 'night-fishing'],
         tidePreference: 'outgoing',
+        tideRegime: 'lagoon',
         tips: [
             'Night fishing is exceptional from spring through fall',
             'Trophy snook hold in the shadows at the bridge light edges',
@@ -231,6 +244,7 @@ export const FISHING_SPOTS: FishingSpot[] = [
         description: 'A bucket-list Florida fishing destination on the southern border of Brevard County. Sebastian Inlet is world-famous for monster snook off the First Point jetty and massive tarpon runs — one of the top snook fisheries on the entire Atlantic coast.',
         features: ['inlet', 'jetty', 'deep-water', 'strong-current', 'world-class'],
         tidePreference: 'outgoing',
+        tideRegime: 'inlet',
         tips: [
             'The First Point jetty is globally renowned for trophy snook — 20–40+ lb fish are common',
             'Tarpon up to 150+ lbs pour through the inlet May–August',

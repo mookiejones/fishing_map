@@ -21,6 +21,8 @@ describe('fetchWeather', () => {
 
         const url = String(fetchMock.mock.calls[0]?.[0]);
         expect(url).toContain('precipitation_unit=inch');
+        expect(url).toContain('temperature_2m');
+        expect(url).toContain('wind_speed_10m');
         expect(url).toContain('temperature_unit=fahrenheit');
         expect(url).toContain('wind_speed_unit=mph');
     });

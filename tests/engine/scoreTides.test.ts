@@ -1,52 +1,44 @@
 import { describe, it, expect } from 'vitest';
 import { FishingEngine } from '../../src/engine';
 import type { TideEvent } from '../../src/types';
-import { incomingSpot, outgoingSpot, baseTides } from './fixtures';
+import { incomingSpot, outgoingSpot } from './fixtures';
+
+const high = (hour: number, minute = 0, height = 1): TideEvent => ({ hour, minute, height, type: 'H' });
+const low = (hour: number, minute = 0, height = 0.2): TideEvent => ({ hour, minute, height, type: 'L' });
 
 describe('FishingEngine.scoreTides', () => {
-    it('returns 14 when no tides are provided', () => {
-        expect(FishingEngine.scoreTides([], incomingSpot)).toBe(14);
+    it('returns 0 when no tides are provided', () => {
+        expect(FishingEngine.scoreTides([], incomingSpot)).toBe(0);
     });
 
-    it('scores higher when preferred tide type is present', () => {
-        const withPreferred: TideEvent[]    = [{ hour: 10, minute: 0, height: 1.0, type: 'H' }];
-        const withoutPreferred: TideEvent[] = [{ hour: 10, minute: 0, height: 0.0, type: 'L' }];
-        expect(FishingEngine.scoreTides(withPreferred, incomingSpot))
-            .toBeGreaterThan(FishingEngine.scoreTides(withoutPreferred, incomingSpot));
+    it('scores an incoming spot higher when the flood runs through dawn', () => {
+        expect(FishingEngine.scoreTides([low(6)], incomingSpot))
+            .toBeGreaterThan(FishingEngine.scoreTides([high(6)], incomingSpot));
     });
 
-    it('grants prime bonus for preferred tide at dawn (5–9)', () => {
-        const dawnH:   TideEvent[] = [{ hour: 6,  minute: 0, height: 1.2, type: 'H' }];
-        const middayH: TideEvent[] = [{ hour: 11, minute: 0, height: 1.2, type: 'H' }];
-        expect(FishingEngine.scoreTides(dawnH, incomingSpot))
-            .toBeGreaterThan(FishingEngine.scoreTides(middayH, incomingSpot));
+    it('scores an outgoing spot higher when the ebb covers dawn than when it misses both prime windows', () => {
+        expect(FishingEngine.scoreTides([high(6)], outgoingSpot))
+            .toBeGreaterThan(FishingEngine.scoreTides([high(10)], outgoingSpot));
     });
 
-    it('grants prime bonus for preferred tide at dusk (16–20)', () => {
-        const duskH:   TideEvent[] = [{ hour: 18, minute: 0, height: 1.2, type: 'H' }];
-        const middayH: TideEvent[] = [{ hour: 11, minute: 0, height: 1.2, type: 'H' }];
-        expect(FishingEngine.scoreTides(duskH, incomingSpot))
-            .toBeGreaterThan(FishingEngine.scoreTides(middayH, incomingSpot));
+    it('ignores ocean tide height', () => {
+        const ocean = [high(6, 45, 5.2), low(13, 0, 0.4)];
+        const inches = [high(6, 45, 0.3), low(13, 0, 0.0)];
+        expect(FishingEngine.scoreTides(ocean, incomingSpot))
+            .toBe(FishingEngine.scoreTides(inches, incomingSpot));
     });
 
-    it('uses L tide preference for outgoing spots', () => {
-        const dawnL: TideEvent[] = [{ hour: 7, minute: 0, height: -0.1, type: 'L' }];
-        const dawnH: TideEvent[] = [{ hour: 7, minute: 0, height:  1.2, type: 'H' }];
-        expect(FishingEngine.scoreTides(dawnL, outgoingSpot))
-            .toBeGreaterThan(FishingEngine.scoreTides(dawnH, outgoingSpot));
+    it('caps microtidal flats below inlet spots for the same ocean schedule', () => {
+        const tides = [low(6, 0, 5.2)];
+        const micro = { ...incomingSpot, id: 'micro', tideRegime: 'micro' as const };
+        const inlet = { ...incomingSpot, id: 'inlet', tideRegime: 'inlet' as const };
+        expect(FishingEngine.scoreTides(tides, micro)).toBeLessThanOrEqual(4);
+        expect(FishingEngine.scoreTides(tides, inlet)).toBeGreaterThan(FishingEngine.scoreTides(tides, micro));
     });
 
-    it('never exceeds 30', () => {
-        expect(FishingEngine.scoreTides(baseTides, incomingSpot)).toBeLessThanOrEqual(30);
-    });
-
-    it('scores more tide events higher (up to the cap)', () => {
-        const oneTide:  TideEvent[] = [{ hour: 6, minute: 0, height: 1.2, type: 'H' }];
-        const twoTides: TideEvent[] = [
-            { hour: 6,  minute: 0, height:  1.2, type: 'H' },
-            { hour: 12, minute: 0, height: -0.1, type: 'L' },
-        ];
-        expect(FishingEngine.scoreTides(twoTides, incomingSpot))
-            .toBeGreaterThanOrEqual(FishingEngine.scoreTides(oneTide, incomingSpot));
+    it('stays inside the regime cap', () => {
+        const busy: TideEvent[] = [low(6), high(12), low(18), high(23)];
+        expect(FishingEngine.scoreTides(busy, incomingSpot)).toBeLessThanOrEqual(8);
+        expect(FishingEngine.scoreTides(busy, { ...incomingSpot, tideRegime: 'inlet' })).toBeLessThanOrEqual(12);
     });
 });

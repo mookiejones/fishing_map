@@ -37,6 +37,13 @@ describe('FishingEngine.getBestTime', () => {
         expect(text).not.toContain('Incoming');
     });
 
+    it('tells a microtidal flat that the ocean tide is not the local water', () => {
+        const micro = { ...incomingSpot, tideRegime: 'micro' as const };
+        const text = FishingEngine.getBestTime([tide(6, 45, 'L')], micro);
+        expect(text).toContain('Wind-driven flat');
+        expect(text).toContain('12:57 PM');
+    });
+
     it('still reports a preferred limb that misses dawn and dusk', () => {
         const text = FishingEngine.getBestTime([tide(15, 30, 'H')], incomingSpot);
         expect(text).toBe('Incoming until 3:30 PM');

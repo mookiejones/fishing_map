@@ -59,7 +59,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
     const { selectedSpot } = useAppContext();
     if (!selectedSpot) return null;
 
-    const { spot, result, species } = selectedSpot;
+    const { spot, result, species, period } = selectedSpot;
 
     return (
         <Drawer
@@ -146,7 +146,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                             })}
                         </Stack>
                         <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
-                            Best time: <Typography component="span" variant="caption" color="primary.main">{result.bestTime}</Typography>
+                            Scored for {period}: <Typography component="span" variant="caption" color="primary.main">{result.bestTime}</Typography>
                         </Typography>
                     </Grid>
 

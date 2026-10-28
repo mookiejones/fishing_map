@@ -8,6 +8,13 @@ import { forecastDates } from '../time/forecastDates';
  */
 function fallbackWeather(): WeatherDay[] {
     const dates = forecastDates(CONFIG.FORECAST_DAYS);
+    const window = {
+        windSpeed: 9,
+        windDir: 90,
+        tempF: 72,
+        precipitation: 0,
+        pressure: 1016,
+    };
     return dates.map(date => ({
         date,
         tempMax:       78,
@@ -18,6 +25,8 @@ function fallbackWeather(): WeatherDay[] {
         weatherCode:   1,
         pressure:      1016,
         pressureTrend: 'stable' as const,
+        dawn:          window,
+        dusk:          window,
     }));
 }
 

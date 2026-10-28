@@ -45,6 +45,10 @@ describe('FISHING_SPOTS', () => {
                 expect(new Set(spot.species).size).toBe(spot.species.length);
             });
 
+            it('has a valid tide regime', () => {
+                expect(['micro', 'lagoon', 'inlet']).toContain(spot.tideRegime);
+            });
+
             it('has a valid tidePreference', () => {
                 expect(VALID_TIDE_PREFS).toContain(spot.tidePreference);
             });

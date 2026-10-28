@@ -5,8 +5,9 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { WeatherAPI } from '../api/api';
 import { FishingEngine } from '../engine';
+import { rateDay } from '../engine/rateDay';
 import { FISHING_SPOTS } from '../spots';
-import { buildConditions } from '../utils';
+import { conditionsForWindow } from '../utils/conditionsForWindow';
 import { CONFIG } from '../config';
 import type {
     WeatherDay, TideEvent, DayConditions,
@@ -24,6 +25,8 @@ export interface SelectedSpot {
     result:  SpotResult;
     /** The specific species that was scored for this selection. */
     species: Species;
+    /** The bite window this result was scored for. */
+    period:  'dawn' | 'dusk';
 }
 
 /** A scored spot ready to render as a map marker, with a (possibly offset) lat/lng position. */
@@ -31,10 +34,12 @@ export interface ScoredSpot {
     spot:    FishingSpot;
     result:  SpotResult;
     species: Species;
-    /** Latitude of the marker — may be slightly offset from `spot.lat` when multiple species share a spot. */
+    /** Latitude of the marker. Offset slightly when several species share a spot. */
     lat:     number;
-    /** Longitude of the marker — may be slightly offset from `spot.lng` when multiple species share a spot. */
+    /** Longitude of the marker. Offset slightly when several species share a spot. */
     lng:     number;
+    /** Which bite window produced `result`. */
+    period:  'dawn' | 'dusk';
 }
 
 // Slight position offsets so per-species markers don't stack exactly
@@ -150,40 +155,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setApiKey(key);
     };
 
+    const selectDay = (i: number) => {
+        setSelectedDay(i);
+        setSelectedSpot(null);
+    };
+
     const conditions = useMemo<DayConditions | null>(() => {
         const day = weatherDays[selectedDay];
         if (!day) return null;
-        return buildConditions(day, tidesByDate[day.date] ?? []);
-    }, [weatherDays, tidesByDate, selectedDay]);
+        return rateDay(day, tidesByDate[day.date] ?? [], selectedSpecies).conditions;
+    }, [weatherDays, tidesByDate, selectedDay, selectedSpecies]);
 
     const scoredSpots = useMemo<ScoredSpot[]>(() => {
-        if (!conditions) return [];
+        const day = weatherDays[selectedDay];
+        if (!day) return [];
+        const tides = tidesByDate[day.date] ?? [];
+
+        const scoreSpecies = (spot: FishingSpot, species: Species): ScoredSpot | null => {
+            let best: { result: SpotResult; period: 'dawn' | 'dusk' } | null = null;
+            for (const period of ['dawn', 'dusk'] as const) {
+                const result = FishingEngine.rateSpot(
+                    spot,
+                    conditionsForWindow(day, period, tides),
+                    species,
+                );
+                if (result && (!best || result.score > best.result.score)) {
+                    best = { result, period };
+                }
+            }
+            if (!best) return null;
+            const offset = selectedSpecies === 'all' ? SPECIES_OFFSET[species] : { lat: 0, lng: 0 };
+            return {
+                spot,
+                result: best.result,
+                species,
+                period: best.period,
+                lat: spot.lat + offset.lat,
+                lng: spot.lng + offset.lng,
+            };
+        };
 
         if (selectedSpecies !== 'all') {
-            // One marker per qualifying spot, no offset
             return FISHING_SPOTS.flatMap(spot => {
-                const result = FishingEngine.rateSpot(spot, conditions, selectedSpecies);
-                return result
-                    ? [{ spot, result, species: selectedSpecies, lat: spot.lat, lng: spot.lng }]
-                    : [];
+                const scored = scoreSpecies(spot, selectedSpecies);
+                return scored ? [scored] : [];
             });
         }
 
-        // All species: one marker per (spot × species) pair, slightly offset
         return FISHING_SPOTS.flatMap(spot =>
             spot.species.flatMap(species => {
-                const result = FishingEngine.rateSpot(spot, conditions, species);
-                if (!result) return [];
-                const { lat: dLat, lng: dLng } = SPECIES_OFFSET[species];
-                return [{ spot, result, species, lat: spot.lat + dLat, lng: spot.lng + dLng }];
+                const scored = scoreSpecies(spot, species);
+                return scored ? [scored] : [];
             }),
         );
-    }, [conditions, selectedSpecies]);
+    }, [weatherDays, tidesByDate, selectedDay, selectedSpecies]);
 
     const value: AppContextValue = {
         apiKey, saveApiKey,
         weatherDays, tidesByDate, dataStatus,
-        selectedDay, setSelectedDay,
+        selectedDay, setSelectedDay: selectDay,
         selectedSpecies, setSelectedSpecies,
         selectedSpot, setSelectedSpot,
         conditions, scoredSpots,

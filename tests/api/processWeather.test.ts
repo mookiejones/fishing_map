@@ -52,31 +52,57 @@ describe('processWeather', () => {
         expect(day!.precipitation).toBe(0);
     });
 
-    it('detects rising pressure trend (diff > 1.5)', () => {
-        const response = makeWeatherResponse([{
-            date: '2024-06-15', tempMax: 85, tempMin: 70,
-            precipitation: 0, windSpeed: 8, windDir: 90, code: 0,
-            pressures: pressures(1012, 1015),   // diff = +3
-        }]);
-        expect(WeatherAPI.processWeather(response)[0]!.pressureTrend).toBe('rising');
+    it('does not treat an afternoon pressure dip as a trend', () => {
+        // Hour 8 is unchanged day to day. 06:00 is high and 18:00 is low.
+        const dip = pressures(1016, 1013);
+        const response = makeWeatherResponse([
+            { date: '2024-06-15', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: dip },
+            { date: '2024-06-16', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: dip },
+        ]);
+        const days = WeatherAPI.processWeather(response);
+        expect(days[0]!.pressureTrend).toBe('stable');
+        expect(days[1]!.pressureTrend).toBe('stable');
     });
 
-    it('detects falling pressure trend (diff < -1.5)', () => {
-        const response = makeWeatherResponse([{
-            date: '2024-06-15', tempMax: 85, tempMin: 70,
-            precipitation: 0, windSpeed: 8, windDir: 90, code: 0,
-            pressures: pressures(1015, 1012),   // diff = -3
-        }]);
-        expect(WeatherAPI.processWeather(response)[0]!.pressureTrend).toBe('falling');
+    it('detects a rising 08:00 pressure against yesterday', () => {
+        const yesterday = new Array(24).fill(1010) as number[];
+        const today = new Array(24).fill(1013) as number[];
+        today[6] = 1016;
+        today[8] = 1013;
+        today[18] = 1010;
+        const response = makeWeatherResponse([
+            { date: '2024-06-15', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: yesterday },
+            { date: '2024-06-16', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: today },
+        ]);
+        expect(WeatherAPI.processWeather(response)[1]!.pressureTrend).toBe('rising');
     });
 
-    it('marks stable when diff is within ±1.5', () => {
+    it('detects a falling 08:00 pressure against yesterday', () => {
+        const yesterday = new Array(24).fill(1016) as number[];
+        const today = new Array(24).fill(1016) as number[];
+        today[8] = 1013;
+        today[18] = 1018;
+        const response = makeWeatherResponse([
+            { date: '2024-06-15', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: yesterday },
+            { date: '2024-06-16', tempMax: 85, tempMin: 70, precipitation: 0, windSpeed: 8, windDir: 90, code: 0, pressures: today },
+        ]);
+        expect(WeatherAPI.processWeather(response)[1]!.pressureTrend).toBe('falling');
+    });
+
+    it('scores dawn from the dawn hours, not the daily maximum wind', () => {
+        const wind = new Array(24).fill(20);
+        wind[5] = 4; wind[6] = 5; wind[7] = 6; wind[8] = 5;
         const response = makeWeatherResponse([{
-            date: '2024-06-15', tempMax: 85, tempMin: 70,
-            precipitation: 0, windSpeed: 8, windDir: 90, code: 0,
-            pressures: pressures(1013, 1014),   // diff = +1
+            date: '2024-06-15', tempMax: 90, tempMin: 70,
+            precipitation: 1, windSpeed: 20, windDir: 180, code: 2,
+            pressures: new Array(24).fill(1015) as number[],
         }]);
-        expect(WeatherAPI.processWeather(response)[0]!.pressureTrend).toBe('stable');
+        response.hourly.wind_speed_10m = wind;
+        response.hourly.temperature_2m = new Array(24).fill(88).map((v, h) => h < 9 ? 74 : v);
+        const [day] = WeatherAPI.processWeather(response);
+        expect(day!.windSpeed).toBe(20);
+        expect(day!.dawn.windSpeed).toBe(5);
+        expect(day!.dawn.tempF).toBe(74);
     });
 
     it('processes multiple days independently', () => {
@@ -86,8 +112,8 @@ describe('processWeather', () => {
         ]);
         const days = WeatherAPI.processWeather(response);
         expect(days).toHaveLength(2);
-        expect(days[0]!.pressureTrend).toBe('rising');
-        expect(days[1]!.pressureTrend).toBe('falling');
+        expect(days[0]!.pressureTrend).toBe('stable');
+        expect(days[1]!.pressureTrend).toBe('stable');
         expect(days[0]!.date).toBe('2024-06-15');
         expect(days[1]!.date).toBe('2024-06-16');
     });

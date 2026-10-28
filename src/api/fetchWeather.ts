@@ -34,7 +34,13 @@ const fetchWeather= async(): Promise<WeatherDay[]> =>{
                 'wind_direction_10m_dominant',
                 'weather_code',
             ].join(','),
-            hourly: 'surface_pressure',
+            hourly: [
+                'temperature_2m',
+                'wind_speed_10m',
+                'wind_direction_10m',
+                'precipitation',
+                'surface_pressure',
+            ].join(','),
         });
 
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);

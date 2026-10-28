@@ -11,8 +11,11 @@ export type SelectedSpecies = Species | 'all';
 /** NOAA tide prediction type: 'H' = high tide, 'L' = low tide. */
 export type TideType        = 'H' | 'L';
 
+/** Whether a spot sees ocean tide, a damped lagoon tide, or almost none. */
+export type TideRegime = 'micro' | 'lagoon' | 'inlet';
+
 /** Whether a spot fishes better on an incoming or outgoing tide. */
-export type TidePreference  = 'incoming' | 'outgoing';
+export type TidePreference = 'incoming' | 'outgoing';
 
 /** Direction of barometric pressure change over the course of a day. */
 export type PressureTrend   = 'rising' | 'falling' | 'stable';
@@ -32,7 +35,19 @@ export interface TideEvent {
     type:   TideType;
 }
 
-/** One day of Open-Meteo forecast data as stored in app state. */
+/** One bite window, aggregated from hourly forecast fields. */
+export interface WeatherWindow {
+    /** Mean wind speed in the window, mph. */
+    windSpeed:     number;
+    /** Circular-mean wind direction, degrees. */
+    windDir:       number;
+    /** Mean air temperature in the window, °F. */
+    tempF:         number;
+    /** Precipitation during the window, inches. */
+    precipitation: number;
+    /** Mean surface pressure in the window, hPa. */
+    pressure:      number;
+}
 export interface WeatherDay {
     /** ISO date string "YYYY-MM-DD". */
     date:          string;
@@ -50,7 +65,12 @@ export interface WeatherDay {
     weatherCode:   number;
     /** Average surface pressure for the day, rounded to the nearest hPa. */
     pressure:      number;
+    /** Change in the 08:00 pressure versus yesterday, not the afternoon dip. */
     pressureTrend: PressureTrend;
+    /** Mean conditions from 05:00 through 08:59 local. */
+    dawn:          WeatherWindow;
+    /** Mean conditions from 17:00 through 20:59 local. */
+    dusk:          WeatherWindow;
 }
 
 /**
@@ -93,8 +113,14 @@ export interface FishingSpot {
     description:    string;
     /** Habitat descriptors shown as chips, e.g. 'flats', 'grass', 'oyster'. */
     features:       string[];
-    /** Whether this spot fishes better on incoming or outgoing tide. */
+    /** Whether this spot fishes better on incoming or outgoing water. */
     tidePreference: TidePreference;
+    /**
+     * How much of the Trident Pier tide actually reaches this spot.
+     * `micro` flats (Mosquito Lagoon) are wind-driven. `inlet` spots
+     * feel the ocean turns. `lagoon` is in between. Height is never scored.
+     */
+    tideRegime:     TideRegime;
     /** Locally-sourced fishing tips shown in the SpotDrawer. */
     tips:           string[];
 }
@@ -210,10 +236,14 @@ export interface OpenMeteoDaily {
     weather_code:                  number[];
 }
 
-/** Hourly surface pressure array from Open-Meteo (one entry per hour, 24 × forecast days). */
+/** Hourly forecast arrays from Open-Meteo, aligned to local midnight. */
 export interface OpenMeteoHourly {
     /** null when sensor data is unavailable for a particular hour. */
     surface_pressure: (number | null)[];
+    temperature_2m?: number[];
+    wind_speed_10m?: number[];
+    wind_direction_10m?: number[];
+    precipitation?: number[];
 }
 
 /** Combined Open-Meteo forecast response consumed by `WeatherAPI.processWeather()`. */

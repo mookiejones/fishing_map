@@ -20,7 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { SIDEBAR_WIDTH } from '../theme';
 import { WeatherAPI } from '../api/api';
-import { FishingEngine } from '../engine';
+import { rateDay } from '../engine/rateDay';
 import { useAppContext } from '../context/AppContext';
 import type { SelectedSpecies } from '../types';
 
@@ -59,7 +59,6 @@ export default function Sidebar() {
         weatherDays, tidesByDate,
         selectedDay, setSelectedDay,
         selectedSpecies, setSelectedSpecies,
-        conditions,
         showOysterBeds, setShowOysterBeds,
         showSeagrass,   setShowSeagrass,
         showBoatRamps,  setShowBoatRamps,
@@ -70,6 +69,11 @@ export default function Sidebar() {
 
     const [forecastOpen, setForecastOpen]     = useState(true);
     const [conditionsOpen, setConditionsOpen] = useState(true);
+    const selectedWeather = weatherDays[selectedDay];
+    const selectedSummary = selectedWeather
+        ? rateDay(selectedWeather, tidesByDate[selectedWeather.date] ?? [], selectedSpecies)
+        : null;
+    const bite = selectedSummary?.conditions;
 
     return (
         <Box sx={{
@@ -227,8 +231,8 @@ export default function Sidebar() {
                                             const d          = new Date(day.date + 'T12:00:00');
                                             const dayName    = i === 0 ? 'Today' : DAY_NAMES[d.getDay()]!;
                                             const tides      = tidesByDate[day.date] ?? [];
-                                            const dayConds   = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
-                                            const rating     = FishingEngine.getDailyRating(dayConds);
+                                            const summary    = rateDay(day, tides, selectedSpecies);
+                                            const rating     = summary.rating;
                                             const wx         = WeatherAPI.weatherInfo(day.weatherCode);
                                             const isSelected = i === selectedDay;
 
@@ -256,10 +260,10 @@ export default function Sidebar() {
                                                                     </Stack>
                                                                     <Stack direction="row" spacing={1}>
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            {Math.round(day.tempMax)}°/{Math.round(day.tempMin)}°F
+                                                                            {summary.period === 'dawn' ? 'Dawn' : 'Dusk'} {Math.round(summary.conditions.tempMax)}°F
                                                                         </Typography>
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            💨 {Math.round(day.windSpeed)} mph
+                                                                            {Math.round(summary.conditions.windSpeed)} mph
                                                                         </Typography>
                                                                     </Stack>
                                                                 </Box>
@@ -273,7 +277,7 @@ export default function Sidebar() {
                                 </Box>
                             </Collapse>
 
-                            {conditions && (
+                            {bite && selectedSummary && (
                                 <>
                                     <Divider />
 
@@ -290,7 +294,7 @@ export default function Sidebar() {
                                             }}
                                         >
                                             <Typography variant="caption" color="text.secondary">
-                                                CONDITIONS
+                                                {selectedSummary.period === 'dawn' ? 'DAWN' : 'DUSK'} CONDITIONS
                                             </Typography>
                                             {conditionsOpen
                                                 ? <ExpandLessIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
@@ -302,27 +306,27 @@ export default function Sidebar() {
                                         <Box sx={{ px: 1.5, pb: 1 }}>
                                             <Stack spacing={0.5}>
                                                 <CondRow icon={<AirIcon fontSize="inherit" />} label="Wind">
-                                                    {Math.round(conditions.windSpeed)} mph {WeatherAPI.degToCompass(conditions.windDir)}
+                                                    {Math.round(bite.windSpeed)} mph {WeatherAPI.degToCompass(bite.windDir)}
                                                 </CondRow>
                                                 <CondRow icon={<ThermostatIcon fontSize="inherit" />} label="Temp">
-                                                    {Math.round(conditions.tempMax)}°F high
+                                                    {Math.round(bite.tempMax)}°F in this window
                                                 </CondRow>
                                                 <CondRow icon={<CompressIcon fontSize="inherit" />} label="Pressure">
-                                                    {conditions.pressure} hPa ({conditions.pressureTrend})
+                                                    {bite.pressure} hPa ({bite.pressureTrend})
                                                 </CondRow>
                                                 <CondRow icon={<WaterIcon fontSize="inherit" />} label="Precip">
-                                                    {conditions.precipitation.toFixed(1)} in
+                                                    {bite.precipitation.toFixed(2)} in
                                                 </CondRow>
                                             </Stack>
 
-                                            {conditions.tides.length > 0 && (
+                                            {bite.tides.length > 0 && (
                                                 <>
                                                     <Divider sx={{ my: 1 }} />
                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                         TIDES — Port Canaveral
                                                     </Typography>
                                                     <List dense disablePadding>
-                                                        {conditions.tides.map((t, i) => (
+                                                        {bite.tides.map((t, i) => (
                                                             <ListItem key={i} disablePadding>
                                                                 <ListItemText
                                                                     primary={`${t.type === 'H' ? '▲ High' : '▼ Low'}  ${WeatherAPI.formatTideTime(t)}`}
