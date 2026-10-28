@@ -139,7 +139,7 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#c8a84b' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#c8a84b !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">🦪 Oyster Beds</Typography>}
+                            label={<Typography variant="caption">Oyster beds (approximate)</Typography>}
                             sx={{ m: 0 }}
                         />
                         <FormControlLabel
@@ -151,7 +151,7 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#00c853' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00c853 !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">🌿 Seagrass Areas</Typography>}
+                            label={<Typography variant="caption">Seagrass (approximate)</Typography>}
                             sx={{ m: 0 }}
                         />
                         <FormControlLabel
@@ -187,10 +187,13 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#4FC3F7' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#4FC3F7 !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">💨 Wind Map</Typography>}
+                            label={<Typography variant="caption">Wind map</Typography>}
                             sx={{ m: 0 }}
                         />
                     </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        Habitat outlines are hand-drawn, not a survey.
+                    </Typography>
                 </Box>
 
                 <Divider />

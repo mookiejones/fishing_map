@@ -9,6 +9,7 @@ import { rateDay } from '../engine/rateDay';
 import { FISHING_SPOTS } from '../spots';
 import { conditionsForWindow } from '../utils/conditionsForWindow';
 import { CONFIG } from '../config';
+import { SPECIES_OFFSET } from '../map/speciesMarkerOffset';
 import type {
     WeatherDay, TideEvent, DayConditions,
     SelectedSpecies, Species, FishingSpot, SpotResult, DataOrigin,
@@ -41,15 +42,6 @@ export interface ScoredSpot {
     /** Which bite window produced `result`. */
     period:  'dawn' | 'dusk';
 }
-
-// Slight position offsets so per-species markers don't stack exactly
-const SPECIES_OFFSET: Record<Species, { lat: number; lng: number }> = {
-    tarpon:           { lat:  0.004, lng:  0.000 },
-    snook:            { lat: -0.002, lng:  0.003 },
-    redfish:          { lat: -0.002, lng: -0.003 },
-    'black drum':     { lat:  0.002, lng:  0.006 },
-    'speckled trout': { lat:  0.002, lng: -0.006 },
-};
 
 /** Shape of the global context value consumed by all child components. */
 interface AppContextValue {
