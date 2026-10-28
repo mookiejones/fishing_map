@@ -15,6 +15,7 @@ import type {
     FishingSpot, DayConditions, SelectedSpecies, Species,
     SpotScores, SpotResult, TideEvent, Rating, PressureTrend,
 } from './types';
+import { bestPhase, PRIME_WINDOWS } from './engine/tidePhase';
 
 /**
  * Pure scoring engine with no external dependencies or side effects.
@@ -359,54 +360,53 @@ export const FishingEngine = {
     },
 
     /**
-     * Suggests the best fishing window as a human-readable string.
+     * Names the moving water, not the slack turn.
      *
-     * Priority order:
-     * 1. Preferred tide type during a prime window (dawn or dusk) →
-     *    e.g. "Dawn tide (~6:00 AM)"
-     * 2. Any preferred tide at any time →
-     *    e.g. "Around 11:00 AM (high tide)"
-     * 3. No preferred tide in the schedule → "Dawn and dusk periods"
-     * 4. No tides at all → "Dawn and dusk periods"
-     *
-     * @param tides - Hi-lo tide schedule for the day.
-     * @param spot  - The fishing spot (provides `tidePreference`).
-     * @returns A descriptive string shown in the SpotDrawer.
+     * Incoming is the rise that ends at high water. Outgoing is the fall
+     * that ends at low water. Minutes are kept. A limb that overlaps
+     * dawn (05:00–09:00) or dusk (16:00–20:00) is labeled with that period.
      */
     getBestTime(tides: TideEvent[], spot: FishingSpot): string {
         if (tides.length === 0) return 'Dawn and dusk periods';
 
-        const isPreferred = (t: TideEvent): boolean =>
-            spot.tidePreference === 'incoming' ? t.type === 'H' : t.type === 'L';
+        const phase = bestPhase(tides, spot.tidePreference);
+        if (!phase) return 'Dawn and dusk periods';
 
-        // Ideal: preferred tide during a prime window
-        for (const t of tides) {
-            if (!isPreferred(t)) continue;
-            if (t.hour >= 5  && t.hour <= 9)  return `Dawn tide (~${fmtHour(t.hour)})`;
-            if (t.hour >= 16 && t.hour <= 20) return `Dusk tide (~${fmtHour(t.hour)})`;
+        // Incoming ends at high water. Outgoing ends at low water.
+        // Naming the turn itself ("high tide" / "low tide") pointed anglers
+        // at slack instead of the moving water.
+        const verb = phase.kind === 'incoming' ? 'Incoming until' : 'Outgoing until';
+        const clock = fmtHour(Math.floor(modDay(phase.endMin) / 60), modDay(phase.endMin) % 60);
+        const dawn = overlapWith(phase, PRIME_WINDOWS[0]!);
+        const dusk = overlapWith(phase, PRIME_WINDOWS[1]!);
+        if (dawn >= 30 || dusk >= 30) {
+            const period = dawn >= dusk ? 'Dawn' : 'Dusk';
+            return `${period}: ${verb} ${clock}`;
         }
-
-        // Fall back to any preferred tide
-        const pref = tides.find(isPreferred);
-        if (pref) {
-            const label = pref.type === 'H' ? 'high' : 'low';
-            return `Around ${fmtHour(pref.hour)} (${label} tide)`;
-        }
-
-        return 'Dawn and dusk periods';
+        return `${verb} ${clock}`;
     },
 };
 
+function modDay(minutes: number): number {
+    return ((minutes % 1440) + 1440) % 1440;
+}
+
+function overlapWith(
+    phase: { startMin: number; endMin: number },
+    window: { start: number; end: number },
+): number {
+    return Math.max(0, Math.min(phase.endMin, window.end) - Math.max(phase.startMin, window.start));
+}
+
 /**
- * Formats a 24-hour integer as a 12-hour clock string with AM/PM.
- *
- * Minutes are always shown as `:00` — this is intentional since the function
- * is used with whole-hour tide event times.
+ * Formats a clock time as a 12-hour string.
  *
  * @param h - Hour in 24-hour format (0–23).
- * @returns Formatted time string, e.g. `'6:00 AM'` or `'12:00 PM'`.
+ * @param minute - Minute (0–59). Defaults to 0.
+ * @returns Formatted time string, e.g. `'6:45 AM'` or `'12:00 PM'`.
  */
-export function fmtHour(h: number): string {
+export function fmtHour(h: number, minute = 0): string {
     const display = h % 12 || 12;
-    return `${display}:00 ${h < 12 ? 'AM' : 'PM'}`;
+    const m = String(minute).padStart(2, '0');
+    return `${display}:${m} ${h < 12 ? 'AM' : 'PM'}`;
 }

@@ -144,13 +144,17 @@ export interface WeatherInfo {
     desc: string;
 }
 
+/** Where each half of a fetch came from. Synthetic halves must not be labeled live. */
+export type DataOrigin = 'live' | 'weather-fallback' | 'tides-fallback' | 'fallback';
+
 /** Return value of `WeatherAPI.fetchAll()`. */
 export interface FetchResult {
     weather: WeatherDay[];
     /** Tide events grouped by "YYYY-MM-DD" date key. */
     tides:   Record<string, TideEvent[]>;
-    /** Error message if either API call failed; null on success. */
+    /** Why a feed was replaced. Null when both feeds are live. */
     error:   string | null;
+    origin:  DataOrigin;
 }
 
 /** Shape of the `CONFIG` constant defined in `config.ts`. */

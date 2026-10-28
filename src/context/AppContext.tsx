@@ -10,13 +10,13 @@ import { buildConditions } from '../utils';
 import { CONFIG } from '../config';
 import type {
     WeatherDay, TideEvent, DayConditions,
-    SelectedSpecies, Species, FishingSpot, SpotResult,
+    SelectedSpecies, Species, FishingSpot, SpotResult, DataOrigin,
 } from '../types';
 
 // ── Types ────────────────────────────────────────────────────
 
-/** Remote data fetch state for weather and tide data. */
-export type DataStatus = 'loading' | 'ok' | 'error';
+/** Remote data fetch state. Synthetic feeds are never reported as live. */
+export type DataStatus = 'loading' | DataOrigin;
 
 /** A fishing spot that the user has clicked on the map, paired with its computed result. */
 export interface SelectedSpot {
@@ -128,10 +128,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Fetch weather + tides on mount
     useEffect(() => {
-        WeatherAPI.fetchAll().then(({ weather, tides, error }) => {
+        WeatherAPI.fetchAll().then(({ weather, tides, origin }) => {
             setWeatherDays(weather);
             setTidesByDate(tides);
-            setDataStatus(error ? 'error' : 'ok');
+            setDataStatus(origin);
         });
     }, []);
 

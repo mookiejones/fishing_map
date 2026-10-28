@@ -9,9 +9,11 @@ import type { DataStatus } from '../context/AppContext';
 
 /** Maps each `DataStatus` to its display label and MUI chip color. */
 const STATUS_CONFIG: Record<DataStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
-    loading: { label: 'Loading…',     color: 'warning' },
-    ok:      { label: 'Live data',    color: 'success' },
-    error:   { label: 'Offline data', color: 'error'   },
+    loading:             { label: 'Loading…',          color: 'warning' },
+    live:                { label: 'Live data',         color: 'success' },
+    'weather-fallback':  { label: 'Estimated weather', color: 'warning' },
+    'tides-fallback':    { label: 'Estimated tides',   color: 'warning' },
+    fallback:            { label: 'Offline data',      color: 'error'   },
 };
 
 /** Fixed app header displaying the title and a live/offline data status chip. */
