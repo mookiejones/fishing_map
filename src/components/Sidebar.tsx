@@ -203,10 +203,13 @@ export default function Sidebar() {
                             <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
                                 <Stack
                                     direction="row"
-                                    justifyContent="space-between"
-                                    alignItems="center"
                                     onClick={() => setForecastOpen(o => !o)}
-                                    sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        userSelect: 'none',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                    }}
                                 >
                                     <Typography variant="caption" color="text.secondary">
                                         7-DAY FORECAST
@@ -237,11 +240,11 @@ export default function Sidebar() {
                                                 >
                                                     <CardActionArea onClick={() => setSelectedDay(i)}>
                                                         <CardContent sx={{ p: '8px 12px !important' }}>
-                                                            <Stack direction="row" alignItems="center" spacing={1}>
+                                                            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                                                                 <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{wx.icon}</Typography>
                                                                 <Box sx={{ flex: 1 }}>
-                                                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                                        <Typography variant="body2" fontWeight={isSelected ? 700 : 400}>
+                                                                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <Typography variant="body2" sx={{ fontWeight: isSelected ? 700 : 400 }}>
                                                                             {dayName}
                                                                         </Typography>
                                                                         <Chip
@@ -278,10 +281,13 @@ export default function Sidebar() {
                                     <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
                                         <Stack
                                             direction="row"
-                                            justifyContent="space-between"
-                                            alignItems="center"
                                             onClick={() => setConditionsOpen(o => !o)}
-                                            sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                            }}
                                         >
                                             <Typography variant="caption" color="text.secondary">
                                                 CONDITIONS
@@ -321,8 +327,13 @@ export default function Sidebar() {
                                                                 <ListItemText
                                                                     primary={`${t.type === 'H' ? '▲ High' : '▼ Low'}  ${WeatherAPI.formatTideTime(t)}`}
                                                                     secondary={`${t.height.toFixed(1)} ft`}
-                                                                    primaryTypographyProps={{ variant: 'caption', color: t.type === 'H' ? 'primary.main' : 'text.secondary' }}
-                                                                    secondaryTypographyProps={{ variant: 'caption' }}
+                                                                    slotProps={{
+                                                                        primary: {
+                                                                            variant: 'caption',
+                                                                            sx: { color: t.type === 'H' ? 'primary.main' : 'text.secondary' },
+                                                                        },
+                                                                        secondary: { variant: 'caption' },
+                                                                    }}
                                                                 />
                                                             </ListItem>
                                                         ))}
@@ -349,7 +360,7 @@ export default function Sidebar() {
  */
 function CondRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
     return (
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             <Box sx={{ color: 'text.secondary', fontSize: 14, display: 'flex' }}>{icon}</Box>
             <Typography variant="caption" color="text.secondary" sx={{ minWidth: 52 }}>{label}</Typography>
             <Typography variant="caption">{children}</Typography>

@@ -25,7 +25,7 @@ export default function TopBar() {
                 <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 0.5, flex: 1 }}>
                     🎣 Brevard County Fishing Hotspots
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                     <Chip label={label} color={color} size="small" />
                 </Stack>
             </Toolbar>
