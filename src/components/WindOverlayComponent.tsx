@@ -159,6 +159,10 @@ export default function WindOverlayComponent({ visible, windDir, windSpeed }: Pr
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const p: Particle = { x: 0, y: 0, age: 0, maxAge: 200, speed: 0, trail: [] };
                 respawn(p, true); // staggered ages → immediate density on load
+                // respawn mutates the particle in place and does not register it.
+                // Without this push the frame loop iterates an empty array and the
+                // overlay canvas stays fully transparent.
+                particles.push(p);
             }
         }
 
