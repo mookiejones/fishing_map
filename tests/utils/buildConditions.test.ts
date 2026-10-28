@@ -2,6 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { buildConditions } from '../../src/utils';
 import type { WeatherDay, TideEvent } from '../../src/types';
 
+const window = {
+    windSpeed: 9,
+    windDir: 135,
+    tempF: 80,
+    precipitation: 0,
+    pressure: 1018,
+};
+
 const mockDay: WeatherDay = {
     date:          '2024-06-15',
     tempMax:       85,
@@ -12,6 +20,8 @@ const mockDay: WeatherDay = {
     weatherCode:   2,
     pressure:      1018,
     pressureTrend: 'stable',
+    dawn:          window,
+    dusk:          window,
 };
 
 const mockTides: TideEvent[] = [

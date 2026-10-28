@@ -15,6 +15,11 @@ describe('fmtHour', () => {
         expect(fmtHour(11)).toBe('11:00 AM');
     });
 
+    it('keeps minutes instead of rounding to the hour', () => {
+        expect(fmtHour(6, 45)).toBe('6:45 AM');
+        expect(fmtHour(13, 2)).toBe('1:02 PM');
+    });
+
     it('formats afternoon/evening hours as PM', () => {
         expect(fmtHour(13)).toBe('1:00 PM');
         expect(fmtHour(18)).toBe('6:00 PM');

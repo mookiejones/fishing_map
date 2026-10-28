@@ -21,6 +21,18 @@ describe('FISHING_SPOTS', () => {
         expect(new Set(names).size).toBe(names.length);
     });
 
+    it('pins the surveyed structures, not a nearby guess', () => {
+        const at = (id: string) => FISHING_SPOTS.find(spot => spot.id === id)!;
+        expect(at('haulover-canal').lat).toBeCloseTo(28.7364, 3);
+        expect(at('haulover-canal').lng).toBeCloseTo(-80.7547, 3);
+        expect(at('nasa-causeway').lat).toBeCloseTo(28.5275, 3);
+        expect(at('nasa-causeway').lng).toBeCloseTo(-80.7655, 3);
+        expect(at('mathers-bridge').lat).toBeCloseTo(28.1492, 3);
+        expect(at('mathers-bridge').lng).toBeCloseTo(-80.6061, 3);
+        expect(at('dragon-point').lat).toBeCloseTo(28.1425, 3);
+        expect(at('dragon-point').lng).toBeCloseTo(-80.6039, 3);
+    });
+
     FISHING_SPOTS.forEach(spot => {
         describe(`"${spot.name}"`, () => {
             it('has a non-empty id, name, and description', () => {
@@ -43,6 +55,10 @@ describe('FISHING_SPOTS', () => {
 
             it('has no duplicate species', () => {
                 expect(new Set(spot.species).size).toBe(spot.species.length);
+            });
+
+            it('has a valid tide regime', () => {
+                expect(['micro', 'lagoon', 'inlet']).toContain(spot.tideRegime);
             });
 
             it('has a valid tidePreference', () => {

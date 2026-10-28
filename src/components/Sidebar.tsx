@@ -15,12 +15,12 @@ import ThermostatIcon from '@mui/icons-material/Thermostat';
 import CompressIcon from '@mui/icons-material/Compress';
 import WaterIcon from '@mui/icons-material/Water';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { SIDEBAR_WIDTH } from '../theme';
 import { WeatherAPI } from '../api/api';
-import { FishingEngine } from '../engine';
+import { rateDay } from '../engine/rateDay';
 import { useAppContext } from '../context/AppContext';
 import type { SelectedSpecies } from '../types';
 
@@ -54,12 +54,12 @@ function ratingChipColor(rating: string): 'success' | 'warning' | 'error' | 'def
  * - Current day conditions (wind, temp, pressure, precip)
  * - Tide schedule for Port Canaveral
  */
-export default function Sidebar() {
+export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) {
+    const isSheet = mode === 'sheet';
     const {
         weatherDays, tidesByDate,
         selectedDay, setSelectedDay,
         selectedSpecies, setSelectedSpecies,
-        conditions,
         showOysterBeds, setShowOysterBeds,
         showSeagrass,   setShowSeagrass,
         showBoatRamps,  setShowBoatRamps,
@@ -70,28 +70,37 @@ export default function Sidebar() {
 
     const [forecastOpen, setForecastOpen]     = useState(true);
     const [conditionsOpen, setConditionsOpen] = useState(true);
+    const selectedWeather = weatherDays[selectedDay];
+    const selectedSummary = selectedWeather
+        ? rateDay(selectedWeather, tidesByDate[selectedWeather.date] ?? [], selectedSpecies)
+        : null;
+    const bite = selectedSummary?.conditions;
 
     return (
         <Box sx={{
-            width:       sidebarOpen ? SIDEBAR_WIDTH : 0,
-            minWidth:    sidebarOpen ? SIDEBAR_WIDTH : 0,
+            width:       isSheet ? '100%' : (sidebarOpen ? SIDEBAR_WIDTH : 0),
+            minWidth:    isSheet ? 0 : (sidebarOpen ? SIDEBAR_WIDTH : 0),
+            height:      isSheet ? '100%' : 'auto',
+            minHeight:   0,
+            flex:        isSheet ? 1 : 'none',
             overflow:    'hidden',
             transition:  'width 0.25s ease, min-width 0.25s ease',
             position:    'relative',
             display:     'flex',
             flexDirection: 'column',
             bgcolor:     'background.default',
-            borderRight: '1px solid',
+            borderRight: isSheet ? 'none' : '1px solid',
             borderColor: 'divider',
         }}>
-            {/* Content wrapper keeps layout stable during animation */}
-            <Box sx={{ width: SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+            <Box sx={{ width: isSheet ? '100%' : SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minHeight: 0 }}>
 
-                {/* ── Collapse button ───────────────────── */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 0.5 }}>
-                    <Tooltip title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'} placement="right">
-                        <IconButton size="small" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                            <ChevronLeftIcon fontSize="small" />
+                <Box sx={{ display: 'flex', justifyContent: isSheet ? 'space-between' : 'flex-end', alignItems: 'center', px: 1, py: 0.5 }}>
+                    {isSheet && (
+                        <Typography variant="caption" color="text.secondary">FORECAST</Typography>
+                    )}
+                    <Tooltip title={isSheet ? 'Close' : 'Collapse sidebar'} placement="right">
+                        <IconButton size="small" onClick={() => setSidebarOpen(false)} aria-label={isSheet ? 'Close forecast' : 'Collapse sidebar'}>
+                            {isSheet ? <CloseIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
                         </IconButton>
                     </Tooltip>
                 </Box>
@@ -135,7 +144,7 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#c8a84b' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#c8a84b !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">🦪 Oyster Beds</Typography>}
+                            label={<Typography variant="caption">Oyster beds (approximate)</Typography>}
                             sx={{ m: 0 }}
                         />
                         <FormControlLabel
@@ -147,7 +156,7 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#00c853' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#00c853 !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">🌿 Seagrass Areas</Typography>}
+                            label={<Typography variant="caption">Seagrass (approximate)</Typography>}
                             sx={{ m: 0 }}
                         />
                         <FormControlLabel
@@ -183,10 +192,13 @@ export default function Sidebar() {
                                     sx={{ '& .MuiSwitch-thumb': { bgcolor: '#4FC3F7' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: '#4FC3F7 !important' } }}
                                 />
                             }
-                            label={<Typography variant="caption">💨 Wind Map</Typography>}
+                            label={<Typography variant="caption">Wind map</Typography>}
                             sx={{ m: 0 }}
                         />
                     </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        Habitat outlines are hand-drawn, not a survey.
+                    </Typography>
                 </Box>
 
                 <Divider />
@@ -203,10 +215,13 @@ export default function Sidebar() {
                             <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
                                 <Stack
                                     direction="row"
-                                    justifyContent="space-between"
-                                    alignItems="center"
                                     onClick={() => setForecastOpen(o => !o)}
-                                    sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        userSelect: 'none',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                    }}
                                 >
                                     <Typography variant="caption" color="text.secondary">
                                         7-DAY FORECAST
@@ -224,8 +239,8 @@ export default function Sidebar() {
                                             const d          = new Date(day.date + 'T12:00:00');
                                             const dayName    = i === 0 ? 'Today' : DAY_NAMES[d.getDay()]!;
                                             const tides      = tidesByDate[day.date] ?? [];
-                                            const dayConds   = { windSpeed: day.windSpeed, windDir: day.windDir, pressure: day.pressure, pressureTrend: day.pressureTrend, tempMax: day.tempMax, tempMin: day.tempMin, precipitation: day.precipitation, weatherCode: day.weatherCode, tides };
-                                            const rating     = FishingEngine.getDailyRating(dayConds);
+                                            const summary    = rateDay(day, tides, selectedSpecies);
+                                            const rating     = summary.rating;
                                             const wx         = WeatherAPI.weatherInfo(day.weatherCode);
                                             const isSelected = i === selectedDay;
 
@@ -237,11 +252,11 @@ export default function Sidebar() {
                                                 >
                                                     <CardActionArea onClick={() => setSelectedDay(i)}>
                                                         <CardContent sx={{ p: '8px 12px !important' }}>
-                                                            <Stack direction="row" alignItems="center" spacing={1}>
+                                                            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                                                                 <Typography sx={{ fontSize: 18, lineHeight: 1 }}>{wx.icon}</Typography>
                                                                 <Box sx={{ flex: 1 }}>
-                                                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                                        <Typography variant="body2" fontWeight={isSelected ? 700 : 400}>
+                                                                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <Typography variant="body2" sx={{ fontWeight: isSelected ? 700 : 400 }}>
                                                                             {dayName}
                                                                         </Typography>
                                                                         <Chip
@@ -253,10 +268,10 @@ export default function Sidebar() {
                                                                     </Stack>
                                                                     <Stack direction="row" spacing={1}>
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            {Math.round(day.tempMax)}°/{Math.round(day.tempMin)}°F
+                                                                            {summary.period === 'dawn' ? 'Dawn' : 'Dusk'} {Math.round(summary.conditions.tempMax)}°F
                                                                         </Typography>
                                                                         <Typography variant="caption" color="text.secondary">
-                                                                            💨 {Math.round(day.windSpeed)} mph
+                                                                            {Math.round(summary.conditions.windSpeed)} mph
                                                                         </Typography>
                                                                     </Stack>
                                                                 </Box>
@@ -270,7 +285,7 @@ export default function Sidebar() {
                                 </Box>
                             </Collapse>
 
-                            {conditions && (
+                            {bite && selectedSummary && (
                                 <>
                                     <Divider />
 
@@ -278,13 +293,16 @@ export default function Sidebar() {
                                     <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
                                         <Stack
                                             direction="row"
-                                            justifyContent="space-between"
-                                            alignItems="center"
                                             onClick={() => setConditionsOpen(o => !o)}
-                                            sx={{ cursor: 'pointer', userSelect: 'none' }}
+                                            sx={{
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                            }}
                                         >
                                             <Typography variant="caption" color="text.secondary">
-                                                CONDITIONS
+                                                {selectedSummary.period === 'dawn' ? 'DAWN' : 'DUSK'} CONDITIONS
                                             </Typography>
                                             {conditionsOpen
                                                 ? <ExpandLessIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
@@ -296,33 +314,38 @@ export default function Sidebar() {
                                         <Box sx={{ px: 1.5, pb: 1 }}>
                                             <Stack spacing={0.5}>
                                                 <CondRow icon={<AirIcon fontSize="inherit" />} label="Wind">
-                                                    {Math.round(conditions.windSpeed)} mph {WeatherAPI.degToCompass(conditions.windDir)}
+                                                    {Math.round(bite.windSpeed)} mph {WeatherAPI.degToCompass(bite.windDir)}
                                                 </CondRow>
                                                 <CondRow icon={<ThermostatIcon fontSize="inherit" />} label="Temp">
-                                                    {Math.round(conditions.tempMax)}°F high
+                                                    {Math.round(bite.tempMax)}°F in this window
                                                 </CondRow>
                                                 <CondRow icon={<CompressIcon fontSize="inherit" />} label="Pressure">
-                                                    {conditions.pressure} hPa ({conditions.pressureTrend})
+                                                    {bite.pressure} hPa ({bite.pressureTrend})
                                                 </CondRow>
                                                 <CondRow icon={<WaterIcon fontSize="inherit" />} label="Precip">
-                                                    {conditions.precipitation.toFixed(1)} in
+                                                    {bite.precipitation.toFixed(2)} in
                                                 </CondRow>
                                             </Stack>
 
-                                            {conditions.tides.length > 0 && (
+                                            {bite.tides.length > 0 && (
                                                 <>
                                                     <Divider sx={{ my: 1 }} />
                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                         TIDES — Port Canaveral
                                                     </Typography>
                                                     <List dense disablePadding>
-                                                        {conditions.tides.map((t, i) => (
+                                                        {bite.tides.map((t, i) => (
                                                             <ListItem key={i} disablePadding>
                                                                 <ListItemText
                                                                     primary={`${t.type === 'H' ? '▲ High' : '▼ Low'}  ${WeatherAPI.formatTideTime(t)}`}
                                                                     secondary={`${t.height.toFixed(1)} ft`}
-                                                                    primaryTypographyProps={{ variant: 'caption', color: t.type === 'H' ? 'primary.main' : 'text.secondary' }}
-                                                                    secondaryTypographyProps={{ variant: 'caption' }}
+                                                                    slotProps={{
+                                                                        primary: {
+                                                                            variant: 'caption',
+                                                                            sx: { color: t.type === 'H' ? 'primary.main' : 'text.secondary' },
+                                                                        },
+                                                                        secondary: { variant: 'caption' },
+                                                                    }}
                                                                 />
                                                             </ListItem>
                                                         ))}
@@ -349,7 +372,7 @@ export default function Sidebar() {
  */
 function CondRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
     return (
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             <Box sx={{ color: 'text.secondary', fontSize: 14, display: 'flex' }}>{icon}</Box>
             <Typography variant="caption" color="text.secondary" sx={{ minWidth: 52 }}>{label}</Typography>
             <Typography variant="caption">{children}</Typography>

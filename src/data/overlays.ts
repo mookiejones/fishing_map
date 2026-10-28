@@ -25,6 +25,7 @@ export interface OverlayPolygon {
  * Lagoon system. Rendered on the map as amber-tinted polygons when the
  * "Oyster Beds" overlay is toggled on in the sidebar.
  */
+// Approximate habitat outlines. Not survey-grade.
 export const OYSTER_BEDS: OverlayPolygon[] = [
     {
         id: 'oyster-ml-north',
@@ -52,14 +53,13 @@ export const OYSTER_BEDS: OverlayPolygon[] = [
     },
     {
         id: 'oyster-haulover',
-        name: 'Haulover Canal Oyster Bars',
+        name: 'Haulover Canal Oyster Bars (approximate)',
         coordinates: [
-            { lat: 28.648, lng: -80.800 },
-            { lat: 28.641, lng: -80.796 },
-            { lat: 28.636, lng: -80.789 },
-            { lat: 28.638, lng: -80.783 },
-            { lat: 28.644, lng: -80.785 },
-            { lat: 28.650, lng: -80.793 },
+            { lat: 28.740, lng: -80.762 },
+            { lat: 28.738, lng: -80.750 },
+            { lat: 28.734, lng: -80.748 },
+            { lat: 28.733, lng: -80.758 },
+            { lat: 28.736, lng: -80.764 },
         ],
     },
     {
@@ -76,14 +76,14 @@ export const OYSTER_BEDS: OverlayPolygon[] = [
     },
     {
         id: 'oyster-dragon-point',
-        name: 'Dragon Point / Melbourne Oyster Bar',
+        name: 'Dragon Point Oyster Bar (approximate)',
         coordinates: [
-            { lat: 28.102, lng: -80.584 },
-            { lat: 28.094, lng: -80.587 },
-            { lat: 28.089, lng: -80.582 },
-            { lat: 28.090, lng: -80.575 },
-            { lat: 28.097, lng: -80.572 },
-            { lat: 28.102, lng: -80.578 },
+            { lat: 28.148, lng: -80.611 },
+            { lat: 28.140, lng: -80.614 },
+            { lat: 28.135, lng: -80.609 },
+            { lat: 28.136, lng: -80.602 },
+            { lat: 28.143, lng: -80.599 },
+            { lat: 28.148, lng: -80.605 },
         ],
     },
     {

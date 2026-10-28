@@ -9,9 +9,11 @@ import type { DataStatus } from '../context/AppContext';
 
 /** Maps each `DataStatus` to its display label and MUI chip color. */
 const STATUS_CONFIG: Record<DataStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
-    loading: { label: 'Loading…',     color: 'warning' },
-    ok:      { label: 'Live data',    color: 'success' },
-    error:   { label: 'Offline data', color: 'error'   },
+    loading:             { label: 'Loading…',          color: 'warning' },
+    live:                { label: 'Live data',         color: 'success' },
+    'weather-fallback':  { label: 'Estimated weather', color: 'warning' },
+    'tides-fallback':    { label: 'Estimated tides',   color: 'warning' },
+    fallback:            { label: 'Offline data',      color: 'error'   },
 };
 
 /** Fixed app header displaying the title and a live/offline data status chip. */
@@ -22,10 +24,14 @@ export default function TopBar() {
     return (
         <AppBar position="static" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider', zIndex: t => t.zIndex.drawer + 1 }}>
             <Toolbar variant="dense" sx={{ gap: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: 0.5, flex: 1 }}>
+                <Typography
+                    variant="h6"
+                    noWrap
+                    sx={{ fontWeight: 700, letterSpacing: 0.5, flex: 1, minWidth: 0, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                >
                     🎣 Brevard County Fishing Hotspots
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                     <Chip label={label} color={color} size="small" />
                 </Stack>
             </Toolbar>
