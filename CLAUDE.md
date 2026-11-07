@@ -11,6 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 After making any code changes, always commit and push them to the remote without asking for confirmation first.
 
+## Grok
+
+Project skill: `.grok/skills/fishing-ship/SKILL.md`. From this repo, `/fishing-ship <issue-number>` lands one GitHub issue (code + PR, sync from main, QA as `mookiejones-qa`, squash-merge as `mookiejones`). Skip a stage that is already done. Stop on the first failure. This skill is repo-local; it does not apply outside `mookiejones/fishing_map`.
+
 ## Commands
 
 ```bash
