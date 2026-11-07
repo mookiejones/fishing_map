@@ -23,9 +23,17 @@ import type { AppConfig } from './types';
  *
  * All other values are static constants targeting Brevard County, Florida.
  */
+function storedGoogleMapsKey(): string | null {
+    try {
+        return globalThis.localStorage?.getItem('fishing_map_gkey') ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export const CONFIG: AppConfig = {
     GOOGLE_MAPS_API_KEY:
-        localStorage.getItem('fishing_map_gkey') ??
+        storedGoogleMapsKey() ??
         import.meta.env.VITE_GOOGLE_MAPS_API_KEY ??
         'YOUR_GOOGLE_MAPS_API_KEY',
 

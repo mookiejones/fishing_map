@@ -29,6 +29,7 @@ An interactive fishing map for **Brevard County, Florida** targeting Tarpon, Sno
 - **Per-species filtering** — toggle between Tarpon (▲), Snook (●), Redfish (▼), or view all
 - **Tide integration** — NOAA hi-lo tide schedule; dawn/dusk prime windows boosted in scoring
 - **Habitat overlays** — toggle oyster beds and seagrass beds on the map
+- **Wind Map** — optional hourly Open-Meteo wind field (speed color ramp, streaks, legend, hour slider) over Cocoa Beach and the lagoons
 - **Spot drawer** — tap any marker for score breakdown, best fishing window, tips, and habitat notes
 - **No backend** — weather data from [Open-Meteo](https://open-meteo.com) (free, no key), tides from [NOAA CO-OPS](https://tidesandcurrents.noaa.gov) (free, no key)
 
