@@ -66,25 +66,27 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
             anchor="bottom"
             open
             onClose={onClose}
-            PaperProps={{
-                sx: {
-                    left:         sidebarWidth,
-                    borderRadius: '12px 12px 0 0',
-                    maxHeight:    '55vh',
-                    overflow:     'auto',
-                    bgcolor:      'background.paper',
-                    border:       '1px solid',
-                    borderColor:  'divider',
-                    borderBottom: 'none',
-                    transition:   'left 0.25s ease',
+            slotProps={{
+                paper: {
+                    sx: {
+                        left:         sidebarWidth,
+                        borderRadius: '12px 12px 0 0',
+                        maxHeight:    '55vh',
+                        overflow:     'auto',
+                        bgcolor:      'background.paper',
+                        border:       '1px solid',
+                        borderColor:  'divider',
+                        borderBottom: 'none',
+                        transition:   'left 0.25s ease',
+                    },
                 },
             }}
         >
             <Box sx={{ p: 2.5 }}>
                 {/* Header */}
-                <Stack direction="row" alignItems="flex-start" spacing={1} sx={{ mb: 1.5 }}>
+                <Stack direction="row" spacing={1} sx={{ mb: 1.5, alignItems: 'flex-start' }}>
                     <Box sx={{ flex: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.5 }}>
+                        <Stack direction="row" spacing={1} sx={{ mb: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
                             <Typography variant="h6" sx={{ fontWeight: 700 }}>{spot.name}</Typography>
                             {/* Species badge — color matches map marker */}
                             <Chip
@@ -114,7 +116,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
 
                 <Grid container spacing={3}>
                     {/* Score breakdown */}
-                    <Grid item xs={12} sm={5}>
+                    <Grid size={{ xs: 12, sm: 5 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                             SCORE BREAKDOWN
                         </Typography>
@@ -124,7 +126,7 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                                 const pct = (val / max) * 100;
                                 return (
                                     <Box key={key}>
-                                        <Stack direction="row" justifyContent="space-between">
+                                        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                                             <Typography variant="caption" color="text.secondary">{label}</Typography>
                                             <Typography variant="caption">{val}/{max}</Typography>
                                         </Stack>
@@ -149,13 +151,13 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                     </Grid>
 
                     {/* All species at this spot + features + tips */}
-                    <Grid item xs={12} sm={7}>
+                    <Grid size={{ xs: 12, sm: 7 }}>
                         <Stack spacing={2}>
                             <Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.75 }}>
                                     ALL SPECIES AT THIS SPOT
                                 </Typography>
-                                <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap' }}>
                                     {spot.species.map(s => (
                                         <Chip
                                             key={s}
@@ -179,7 +181,9 @@ export default function SpotDrawer({ sidebarWidth, onClose }: Props) {
                                         <ListItem key={i} disablePadding sx={{ alignItems: 'flex-start' }}>
                                             <ListItemText
                                                 primary={`• ${tip}`}
-                                                primaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+                                                slotProps={{
+                                                    primary: { variant: 'caption', sx: { color: 'text.secondary' } },
+                                                }}
                                             />
                                         </ListItem>
                                     ))}

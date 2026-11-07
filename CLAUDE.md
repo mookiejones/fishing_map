@@ -26,7 +26,7 @@ npm run test     # Vitest in watch mode
 npm run test:run # Vitest single run (CI / pre-push)
 ```
 
-Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts` file per function. Run a single file: `npx vitest run tests/engine/scoreWind.test.ts`. Tests use jsdom environment (required because `config.ts` calls `localStorage` at import time).
+Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts` file per function. Run a single file: `npx vitest run tests/engine/scoreWind.test.ts`. Tests use jsdom environment. `config.ts` reads `localStorage` through a guarded helper so Node 25+ workers without Storage still load.
 
 ## Architecture
 
@@ -61,6 +61,7 @@ All components call `useAppContext()` directly — no prop drilling.
 | `src/data/overlays.ts` | `OYSTER_BEDS` + `SEAGRASS_BEDS` — approximate polygon coordinates for map overlays |
 | `src/data/boatRamps.ts` | `BOAT_RAMPS` — 12 public boat ramp point locations (lat/lng) for Brevard County |
 | `src/config.ts` | `CONFIG` — API key (reads `localStorage` key `fishing_map_gkey`), map center, NOAA station, weather coords |
+| `src/wind/` | Hourly Open-Meteo wind lattice, raster, and particle advection for the Wind Map overlay |
 | `src/utils.ts` | `buildConditions()` — assembles `DayConditions` from `WeatherDay` + tides |
 | `src/theme.ts` | MUI dark nautical theme + `SIDEBAR_WIDTH = 320` |
 | `src/types.ts` | All shared TypeScript types and interfaces |
@@ -77,7 +78,11 @@ Species marker shapes:
 - `mapStyles.tsx` — dark nautical `MAP_STYLES` array
 - `speciesPath.tsx` — maps `Species` → `google.maps.SymbolPath`
 - `HabitatOverlaysComponent.tsx` — imperative polygon lifecycle (create on map-ready, toggle visibility)
+- `WindOverlayComponent.tsx` — mounts wind canvases via `attachWindOverlay`
+- `WindHud` — legend and hourly slider when Wind Map is on
 - `SetupBannerComponent.tsx` — shown when no valid API key
+
+`src/vite-env.d.ts` references `google.maps` so `tsc` sees the Maps namespace. MUI 9 system props (`alignItems`, `flexWrap`, Grid `item`) live in `sx` / `size` / `slotProps`.
 
 `src/containers/FisingMapContainer.tsx` (note: typo in filename) is an alternate container wrapping `MapInner` + `SetupBanner`.
 
