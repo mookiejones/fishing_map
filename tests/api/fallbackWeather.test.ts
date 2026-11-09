@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { WeatherAPI } from '../../src/api/api';
 import { CONFIG } from '../../src/config';
+import { forecastDates } from '../../src/time/forecastDates';
 
 describe('fallbackWeather', () => {
     it('returns FORECAST_DAYS items', () => {
@@ -21,14 +22,8 @@ describe('fallbackWeather', () => {
         });
     });
 
-    it('dates are sequential starting from today', () => {
-        const days  = WeatherAPI.fallbackWeather();
-        const today = new Date().toISOString().slice(0, 10);
-        expect(days[0]!.date).toBe(today);
-        for (let i = 1; i < days.length; i++) {
-            const prev = new Date(days[i - 1]!.date);
-            const curr = new Date(days[i]!.date);
-            expect(curr.getTime() - prev.getTime()).toBe(24 * 60 * 60 * 1000);
-        }
+    it('dates follow the local fishing calendar, not UTC', () => {
+        const days = WeatherAPI.fallbackWeather();
+        expect(days.map(day => day.date)).toEqual(forecastDates(CONFIG.FORECAST_DAYS));
     });
 });

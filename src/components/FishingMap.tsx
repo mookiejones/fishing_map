@@ -155,7 +155,7 @@ export function MapInner() {
 
                         {/* Fishing spot markers — one per (spot × species) */}
                         {scoredSpots.map((s: ScoredSpot) => {
-                            const { spot, result, species, lat, lng } = s;
+                            const { spot, result, species, period, lat, lng } = s;
                             const isSelected = selectedSpot?.spot.id === spot.id &&
                                                selectedSpot?.species === species;
 
@@ -173,7 +173,7 @@ export function MapInner() {
                                     title={`${spot.name} (${species}) — ${result.rating} (${result.score})`}                                
                                     icon={icon}
                                     zIndex={isSelected ? 1000 : result.score}
-                                    onClick={() => setSelectedSpot({ spot, result, species })}
+                                    onClick={() => setSelectedSpot({ spot, result, species, period })}
                                />
                             );
                         })}

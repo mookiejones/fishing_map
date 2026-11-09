@@ -15,6 +15,21 @@ import type {
     FishingSpot, DayConditions, SelectedSpecies, Species,
     SpotScores, SpotResult, TideEvent, Rating, PressureTrend,
 } from './types';
+import { bestPhase, primeOverlap, PRIME_WINDOWS } from './engine/tidePhase';
+
+/** Lagoon flat used when a day rating has no specific spot. */
+const REFERENCE_FLAT: FishingSpot = {
+    id: 'day-reference',
+    name: 'Lagoon reference',
+    lat: 28.35,
+    lng: -80.67,
+    species: ['snook', 'redfish', 'tarpon', 'black drum', 'speckled trout'],
+    description: '',
+    features: ['flats'],
+    tidePreference: 'incoming',
+    tideRegime: 'lagoon',
+    tips: [],
+};
 
 /**
  * Pure scoring engine with no external dependencies or side effects.
@@ -53,7 +68,7 @@ export const FishingEngine = {
         const scores: SpotScores = {
             wind:          this.scoreWind(conditions.windSpeed),
             pressure:      this.scorePressure(conditions.pressure, conditions.pressureTrend),
-            tides:         this.scoreWaterMovement(conditions.tides, conditions),
+            tides:         this.scoreWaterMovement(conditions.tides, conditions, spot),
             temperature:   this.scoreTemperature(conditions.tempMax, primarySpecies),
             windDirection: this.scoreWindDirection(conditions.windDir),
             coldFront:     this.scoreColdFront(conditions.pressureTrend, conditions.windDir),
@@ -62,10 +77,11 @@ export const FishingEngine = {
 
         const total  = scores.wind + scores.pressure + scores.tides + scores.temperature
                      + scores.windDirection + scores.coldFront + scores.precipitation;
-        const rating = this.getRating(total);
+        const score  = Math.round(Math.min(100, total));
+        const rating = this.getRating(score);
 
         return {
-            score:    Math.round(Math.min(100, total)),
+            score,
             rating,
             color:    this.getRatingColor(rating),
             scores,
@@ -121,57 +137,21 @@ export const FishingEngine = {
     },
 
     /**
-     * Scores the day's tides on a 0–30 point scale.
+     * Points for the preferred moving tide, capped by how much ocean tide
+     * the spot actually sees. Tide height is ignored: a 5 ft Trident Pier
+     * high is not a 5 ft tide on a Mosquito Lagoon flat.
      *
-     * Scoring components:
-     * - **Activity** (0–8): more tide events → more tidal flushing → higher score.
-     * - **Preference** (5 or 12): whether the spot's preferred tide type occurs.
-     * - **Prime bonus** (0 or 10): whether the preferred tide falls in a dawn or
-     *   dusk window (5–9 h or 16–20 h local time).
-     *
-     * Returns 14 (neutral) when no tides are available.
-     *
-     * @param tides - Hi-lo tide schedule for the day.
-     * @param spot  - The fishing spot (provides `tidePreference`).
-     * @returns Tides sub-score (0–30).
+     * micro 0–4, lagoon 0–8, inlet 0–12.
      */
     scoreTides(tides: TideEvent[], spot: FishingSpot): number {
-        if (tides.length === 0) return 14;
-
-        // Points for having multiple tide events (tidal flushing activity)
-        const activityScore = Math.min(8, tides.length * 2);
-
-        // Points for preferred tide type occurring anywhere in the day
-        const hasPreferred = tides.some(t =>
-            spot.tidePreference === 'incoming' ? t.type === 'H' : t.type === 'L',
-        );
-        const preferenceScore = hasPreferred ? 12 : 5;
-
-        // Bonus when the preferred tide falls during prime feeding windows
-        const primeBonus = this.primeTideBonus(tides, spot);
-
-        return Math.min(30, activityScore + preferenceScore + primeBonus);
-    },
-
-    /**
-     * Returns 10 if any preferred tide event falls within a prime feeding window
-     * (dawn: 5–9 h, dusk: 16–20 h), otherwise 0.
-     *
-     * @param tides - Hi-lo tide schedule for the day.
-     * @param spot  - The fishing spot (provides `tidePreference`).
-     * @returns 10 or 0.
-     */
-    primeTideBonus(tides: TideEvent[], spot: FishingSpot): number {
-        for (const t of tides) {
-            const isDawn = t.hour >= 5 && t.hour <= 9;
-            const isDusk = t.hour >= 16 && t.hour <= 20;
-            const isPreferred = spot.tidePreference === 'incoming'
-                ? t.type === 'H'
-                : t.type === 'L';
-
-            if (isPreferred && (isDawn || isDusk)) return 10;
-        }
-        return 0;
+        const cap = spot.tideRegime === 'micro' ? 4 : spot.tideRegime === 'inlet' ? 12 : 8;
+        const phase = bestPhase(tides, spot.tidePreference);
+        if (!phase) return 0;
+        const overlap = primeOverlap(phase);
+        if (overlap >= 90) return cap;
+        if (overlap >= 30) return Math.round(cap * 0.75);
+        const duringDay = phase.endMin > 0 && phase.startMin < 24 * 60;
+        return duringDay ? Math.round(cap * 0.4) : 0;
     },
 
     /**
@@ -212,41 +192,35 @@ export const FishingEngine = {
     },
 
     /**
-     * Scores wind direction on a 0–10 point scale for Indian River Lagoon fishing.
-     *
-     * The IRL is a wind-driven system. SE/E winds push water onto the western grass
-     * flats, improving depth and visibility. N/NW winds blow water off the flats,
-     * drop water levels, and commonly accompany cold fronts.
-     *
-     * @param windDir - Dominant wind direction in meteorological degrees (0–360, 0/360 = N).
-     * @returns Wind direction sub-score (0–10).
+     * East to southeast wind pushes water onto the western flats. A northeast
+     * sea breeze (about 25–70°) is everyday fishable wind on this coast, not
+     * a north wind. Only northwest through north (300–360 and 0–25°) is the
+     * cold-front direction.
      */
     scoreWindDirection(windDir: number): number {
-        if (windDir >= 90  && windDir <= 160) return 10;  // E to SE — ideal for IRL flats
-        if (windDir >= 60  && windDir <= 200) return 7;   // NE to S — generally good
-        if (windDir >= 200 && windDir <= 250) return 4;   // SSW to WSW — neutral
-        if (windDir >= 250 && windDir <= 290) return 2;   // W to WNW — unfavorable
-        return 0;  // NW through N to NNE (>290 or <60) — worst; cold-front direction
+        const d = normalizeDir(windDir);
+        if (d >= 70 && d < 150) return 10;
+        if (d >= 40 && d < 70)  return 7;
+        if (d >= 25 && d < 40)  return 5;
+        if (d >= 150 && d < 200) return 6;
+        if (d >= 200 && d < 250) return 4;
+        if (d >= 250 && d < 300) return 2;
+        return 0;
     },
 
     /**
-     * Scores cold-front risk on a 0–10 point scale.
+     * Scores cold-front risk, 0–10. Higher means no front.
      *
-     * Active cold fronts are the single biggest fishing killer in Florida inshore
-     * waters. Falling pressure combined with northerly winds signals an approaching
-     * or active front. Post-front high pressure + northerly winds means water has
-     * cooled and fish are lethargic.
-     *
-     * @param trend   - Barometric pressure trend for the day.
-     * @param windDir - Dominant wind direction in degrees.
-     * @returns Cold front sub-score (0–10). Higher = no front present.
+     * A front is falling pressure together with a northwest or north wind.
+     * Northeast wind is not that wind. The pressure trend itself has to be a
+     * real day-over-day change; the afternoon dip is removed upstream.
      */
     scoreColdFront(trend: PressureTrend, windDir: number): number {
-        const isNortherly = windDir > 290 || windDir < 60;  // NW through N to NNE
-        if (trend === 'falling' && isNortherly) return 0;   // Active front — worst
-        if (trend === 'rising'  && isNortherly) return 4;   // Post-front recovery
-        if (trend === 'falling' && !isNortherly) return 6;  // Pre-front push — brief bite
-        return 10;  // Stable/rising + non-northerly — normal or improving conditions
+        const isNortherly = isFrontWind(windDir);
+        if (trend === 'falling' && isNortherly) return 0;
+        if (trend === 'rising'  && isNortherly) return 4;
+        if (trend === 'falling' && !isNortherly) return 6;
+        return 10;
     },
 
     /**
@@ -266,61 +240,35 @@ export const FishingEngine = {
     },
 
     /**
-     * Scores water movement on a 0–20 point scale for the Indian River Lagoon.
-     *
-     * The IRL is a microtidal estuary (tidal range < 1 ft); water movement is
-     * primarily driven by wind and barometric pressure changes rather than lunar
-     * tides. This method uses NOAA hi-lo data only as a minor supplement while
-     * weighting wind-driven and pressure-driven movement more heavily.
-     *
-     * Scoring components:
-     * - **Tidal activity** (0–4): number of NOAA tide events as a proxy for minor
-     *   water flushing through inlet connections.
-     * - **Pressure activity** (0–8): any pressure change (rising or falling) stirs
-     *   the water column and triggers feeding — stable pressure means stagnant water.
-     * - **Wind movement** (0–8): moderate wind (5–18 mph) drives productive currents;
-     *   too calm = stagnant, too strong = turbid and unfishable.
-     *
-     * @param tides      - NOAA hi-lo tide schedule (used as minor supplement only).
-     * @param conditions - Full day conditions including wind and pressure trend.
-     * @returns Water movement sub-score (0–20).
+     * Water movement, 0–20. Wind is shared. Tide timing is weighted by regime
+     * so an ocean station cannot outscore a microtidal flat.
      */
-    scoreWaterMovement(tides: TideEvent[], conditions: DayConditions): number {
-        // Minor tidal supplement — IRL inlets do exchange some water with the ocean
-        const tidalActivity = Math.min(4, tides.length);
-
-        // Any pressure change (rise or fall) drives water level change and fish movement
-        const pressureActivity = conditions.pressureTrend !== 'stable' ? 8 : 2;
-
-        // Wind speed drives surface currents; moderate = best, calm or gale = poor
+    scoreWaterMovement(tides: TideEvent[], conditions: DayConditions, spot: FishingSpot): number {
+        const timing = this.scoreTides(tides, spot);
+        const pressureActivity = conditions.pressureTrend !== 'stable' ? 6 : 2;
         const { windSpeed } = conditions;
         const windMovement = windSpeed >= 5 && windSpeed <= 18 ? 8
-            : windSpeed < 5  ? 4   // too calm — water stagnates
-            : 2;                   // too strong — turbidity, angler difficulty
+            : windSpeed < 5 ? 4
+            : 2;
 
-        return Math.min(20, tidalActivity + pressureActivity + windMovement);
+        if (spot.tideRegime === 'inlet') {
+            return Math.min(20, timing + windMovement);
+        }
+        if (spot.tideRegime === 'micro') {
+            return Math.min(20, timing + pressureActivity + windMovement);
+        }
+        return Math.min(20, timing + Math.round(pressureActivity / 2) + windMovement);
     },
 
     /**
-     * Produces a single aggregate `Rating` for a day card in the sidebar.
-     *
-     * Uses a simplified temperature proxy (distance from a 78 °F target)
-     * rather than per-species scoring, since no species is selected at this level.
-     * Incorporates cold front and wind direction for a more accurate daily overview.
-     *
-     * @param conditions - Weather and tide conditions for the day.
-     * @returns A `Rating` string ('excellent' | 'good' | 'fair' | 'poor').
+     * Day-card rating. Same `rateSpot` formula as the markers, on a lagoon
+     * reference flat. Species `"all"` uses snook as the thermal reference
+     * only here; the sidebar's day chip uses `rateDay`, which medians the
+     * real spots.
      */
-    getDailyRating(conditions: DayConditions): Rating {
-        const wind      = this.scoreWind(conditions.windSpeed);
-        const pressure  = this.scorePressure(conditions.pressure, conditions.pressureTrend);
-        const temp      = Math.max(5, 15 - Math.abs(conditions.tempMax - 78) * 0.4);
-        const water     = this.scoreWaterMovement(conditions.tides, conditions);
-        const windDir   = this.scoreWindDirection(conditions.windDir);
-        const coldFront = this.scoreColdFront(conditions.pressureTrend, conditions.windDir);
-        const precip    = this.scorePrecipitation(conditions.precipitation);
-
-        return this.getRating(wind + pressure + temp + water + windDir + coldFront + precip);
+    getDailyRating(conditions: DayConditions, species: SelectedSpecies = 'all'): Rating {
+        const scoredSpecies = species === 'all' ? 'snook' : species;
+        return this.rateSpot(REFERENCE_FLAT, conditions, scoredSpecies)!.rating;
     },
 
     /**
@@ -359,54 +307,68 @@ export const FishingEngine = {
     },
 
     /**
-     * Suggests the best fishing window as a human-readable string.
+     * Names the moving water, not the slack turn.
      *
-     * Priority order:
-     * 1. Preferred tide type during a prime window (dawn or dusk) →
-     *    e.g. "Dawn tide (~6:00 AM)"
-     * 2. Any preferred tide at any time →
-     *    e.g. "Around 11:00 AM (high tide)"
-     * 3. No preferred tide in the schedule → "Dawn and dusk periods"
-     * 4. No tides at all → "Dawn and dusk periods"
-     *
-     * @param tides - Hi-lo tide schedule for the day.
-     * @param spot  - The fishing spot (provides `tidePreference`).
-     * @returns A descriptive string shown in the SpotDrawer.
+     * Incoming is the rise that ends at high water. Outgoing is the fall
+     * that ends at low water. Minutes are kept. A limb that overlaps
+     * dawn (05:00–09:00) or dusk (16:00–20:00) is labeled with that period.
      */
     getBestTime(tides: TideEvent[], spot: FishingSpot): string {
         if (tides.length === 0) return 'Dawn and dusk periods';
 
-        const isPreferred = (t: TideEvent): boolean =>
-            spot.tidePreference === 'incoming' ? t.type === 'H' : t.type === 'L';
-
-        // Ideal: preferred tide during a prime window
-        for (const t of tides) {
-            if (!isPreferred(t)) continue;
-            if (t.hour >= 5  && t.hour <= 9)  return `Dawn tide (~${fmtHour(t.hour)})`;
-            if (t.hour >= 16 && t.hour <= 20) return `Dusk tide (~${fmtHour(t.hour)})`;
+        const phase = bestPhase(tides, spot.tidePreference);
+        if (!phase) {
+            return spot.tideRegime === 'micro'
+                ? 'Dawn and dusk — wind-driven flat'
+                : 'Dawn and dusk periods';
         }
 
-        // Fall back to any preferred tide
-        const pref = tides.find(isPreferred);
-        if (pref) {
-            const label = pref.type === 'H' ? 'high' : 'low';
-            return `Around ${fmtHour(pref.hour)} (${label} tide)`;
+        // Incoming ends at high water. Outgoing ends at low water.
+        const verb = phase.kind === 'incoming' ? 'Incoming until' : 'Outgoing until';
+        const clock = fmtHour(Math.floor(modDay(phase.endMin) / 60), modDay(phase.endMin) % 60);
+        if (spot.tideRegime === 'micro') {
+            return `Wind-driven flat. Weak ${verb.toLowerCase()} ${clock}`;
         }
-
-        return 'Dawn and dusk periods';
+        const dawn = overlapWith(phase, PRIME_WINDOWS[0]!);
+        const dusk = overlapWith(phase, PRIME_WINDOWS[1]!);
+        if (dawn >= 30 || dusk >= 30) {
+            const period = dawn >= dusk ? 'Dawn' : 'Dusk';
+            return `${period}: ${verb} ${clock}`;
+        }
+        return `${verb} ${clock}`;
     },
 };
 
+function normalizeDir(windDir: number): number {
+    return ((windDir % 360) + 360) % 360;
+}
+
+/** Northwest through north. Northeast sea breeze is excluded. */
+function isFrontWind(windDir: number): boolean {
+    const d = normalizeDir(windDir);
+    return d >= 300 || d < 25;
+}
+
+function modDay(minutes: number): number {
+    return ((minutes % 1440) + 1440) % 1440;
+}
+
+function overlapWith(
+    phase: { startMin: number; endMin: number },
+    window: { start: number; end: number },
+): number {
+    return Math.max(0, Math.min(phase.endMin, window.end) - Math.max(phase.startMin, window.start));
+}
+
 /**
- * Formats a 24-hour integer as a 12-hour clock string with AM/PM.
- *
- * Minutes are always shown as `:00` — this is intentional since the function
- * is used with whole-hour tide event times.
+ * Formats a clock time as a 12-hour string.
  *
  * @param h - Hour in 24-hour format (0–23).
- * @returns Formatted time string, e.g. `'6:00 AM'` or `'12:00 PM'`.
+ * @param minute - Minute (0–59). Defaults to 0.
+ * @returns Formatted time string, e.g. `'6:45 AM'` or `'12:00 PM'`.
  */
-export function fmtHour(h: number): string {
+export function fmtHour(h: number, minute = 0): string {
     const display = h % 12 || 12;
-    return `${display}:00 ${h < 12 ? 'AM' : 'PM'}`;
+    const m = String(minute).padStart(2, '0');
+    return `${display}:${m} ${h < 12 ? 'AM' : 'PM'}`;
 }

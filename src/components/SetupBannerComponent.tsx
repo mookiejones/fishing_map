@@ -20,8 +20,9 @@ function SetupBanner({ onSave }: { onSave: (key: string) => void }) {
             <Paper elevation={4} sx={{ p: 4, maxWidth: 480, width: '100%', mx: 2 }}>
                 <Typography variant="h6" gutterBottom>Google Maps API Key Required</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Enter your Maps JavaScript API key to display the interactive map.
-                    Weather and tide data are already loading in the sidebar.
+                    The key stays in this browser. In Google Cloud, restrict it by HTTP referrer
+                    to this site so a key that is compiled into the GitHub Pages bundle
+                    cannot be reused elsewhere.
                 </Typography>
                 <Stack direction="row" spacing={1}>
                     <TextField

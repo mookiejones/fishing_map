@@ -19,13 +19,13 @@ export interface BoatRamp {
  */
 export const BOAT_RAMPS: BoatRamp[] = [
     { id: 'ramp-rotary-park',     name: 'Rotary Park Ramp — Titusville',      lat: 28.6178, lng: -80.8072 },
-    { id: 'ramp-haulover-canal',  name: 'Haulover Canal Ramp',                lat: 28.7187, lng: -80.8427 },
+    { id: 'ramp-haulover-canal',  name: 'Bairs Cove — Haulover Canal',        lat: 28.73294, lng: -80.75699 },
     { id: 'ramp-scottsmoor',      name: 'Scottsmoor Landing Ramp',            lat: 28.7420, lng: -80.8488 },
     { id: 'ramp-port-st-john',    name: 'Port St. John Boat Ramp',            lat: 28.4892, lng: -80.7926 },
     { id: 'ramp-sykes-creek',     name: 'Sykes Creek Ramp — Merritt Island',  lat: 28.3628, lng: -80.6881 },
     { id: 'ramp-ramp-road-cocoa', name: 'Ramp Road Park — Cocoa',             lat: 28.3578, lng: -80.7232 },
     { id: 'ramp-ballard-park',    name: 'Ballard Park Ramp — Rockledge',      lat: 28.3295, lng: -80.7215 },
-    { id: 'ramp-dragon-point',    name: 'Dragon Point Ramp — S. Merritt Is.', lat: 28.3218, lng: -80.6752 },
+    { id: 'ramp-oars-paddles',    name: 'Oars & Paddles — Dragon Point',     lat: 28.14988, lng: -80.60121 },
     { id: 'ramp-veterans-mel',    name: 'Veterans Memorial Park — Melbourne', lat: 28.0738, lng: -80.6179 },
     { id: 'ramp-sebastian-inlet', name: 'Sebastian Inlet State Park Ramp',    lat: 27.8594, lng: -80.4535 },
     { id: 'ramp-peacock-pocket',  name: 'Peacock Pocket Ramp — Rockledge',    lat: 28.3413, lng: -80.7202 },

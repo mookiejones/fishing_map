@@ -9,6 +9,7 @@ export const incomingSpot: FishingSpot = {
     description: 'Test',
     features: ['flats'],
     tidePreference: 'incoming',
+    tideRegime: 'lagoon',
     tips: [],
 };
 

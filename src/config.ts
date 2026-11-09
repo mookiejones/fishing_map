@@ -6,7 +6,11 @@
 //   1. Visit https://console.cloud.google.com and open/create a project
 //   2. APIs & Services → Library → enable "Maps JavaScript API"
 //   3. APIs & Services → Credentials → + Create Credentials → API key
-//   4. Paste the key below (or enter it in the in-app setup screen)
+//   4. Restrict the key by HTTP referrer (this site, and localhost while
+//      developing). A key injected as VITE_GOOGLE_MAPS_API_KEY is compiled
+//      into the public GitHub Pages bundle.
+//   5. Paste the key below, or enter it in the in-app setup screen. It is
+//      stored in localStorage under `fishing_map_gkey`.
 //
 // Weather (Open-Meteo) and tide (NOAA) data require NO key.
 // ============================================================

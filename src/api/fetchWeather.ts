@@ -23,6 +23,9 @@ const fetchWeather= async(): Promise<WeatherDay[]> =>{
             forecast_days: String(CONFIG.FORECAST_DAYS),
             wind_speed_unit:  'mph',
             temperature_unit: 'fahrenheit',
+            // Open-Meteo defaults to millimetres. The scorer and the sidebar
+            // both treat this value as inches.
+            precipitation_unit: 'inch',
             daily: [
                 'temperature_2m_max',
                 'temperature_2m_min',
@@ -31,7 +34,13 @@ const fetchWeather= async(): Promise<WeatherDay[]> =>{
                 'wind_direction_10m_dominant',
                 'weather_code',
             ].join(','),
-            hourly: 'surface_pressure',
+            hourly: [
+                'temperature_2m',
+                'wind_speed_10m',
+                'wind_direction_10m',
+                'precipitation',
+                'surface_pressure',
+            ].join(','),
         });
 
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);

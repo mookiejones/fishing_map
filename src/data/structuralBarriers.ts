@@ -67,9 +67,9 @@ export const STRUCTURAL_BARRIERS: StructuralBarrier[] = [
         name: 'Haulover Canal',
         type: 'canal',
         path: [
-            { lat: 28.6455, lng: -80.8010 },
-            { lat: 28.6415, lng: -80.7870 },
-            { lat: 28.6394, lng: -80.7853 },
+            { lat: 28.7368, lng: -80.7650 },
+            { lat: 28.7364, lng: -80.7547 },
+            { lat: 28.7362, lng: -80.7450 },
         ],
     },
     {
@@ -77,8 +77,9 @@ export const STRUCTURAL_BARRIERS: StructuralBarrier[] = [
         name: 'NASA Causeway (SR-405)',
         type: 'causeway',
         path: [
-            { lat: 28.6004, lng: -80.7640 },
-            { lat: 28.6004, lng: -80.7078 },
+            { lat: 28.5276, lng: -80.8080 },
+            { lat: 28.5275, lng: -80.7655 },
+            { lat: 28.5275, lng: -80.7200 },
         ],
     },
     {
@@ -110,11 +111,11 @@ export const STRUCTURAL_BARRIERS: StructuralBarrier[] = [
     },
     {
         id:   'mathers-bridge',
-        name: "Mather's Bridge (old US-192)",
+        name: "Mather's Bridge (CR-3)",
         type: 'bridge',
         path: [
-            { lat: 28.0920, lng: -80.6310 },
-            { lat: 28.0920, lng: -80.5790 },
+            { lat: 28.1492, lng: -80.6120 },
+            { lat: 28.1492, lng: -80.6000 },
         ],
     },
     {
