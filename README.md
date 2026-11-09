@@ -24,10 +24,12 @@ An interactive fishing map for **Brevard County, Florida** — Indian River Lago
 
 ## Features
 
+- **7-day forecast panel** — wind, pressure, precipitation, and tide overview for each day
 - **Scored map markers** — each hotspot scored 0–100 at dawn and at dusk. The better window wins. Color is the rating
 - **Per-species filtering** — tarpon, snook, redfish, black drum, speckled trout, or all
 - **Tide integration** — NOAA hi-lo for Trident Pier (8721604) in local daylight time. Incoming is the rise into high water. Outgoing is the fall into low water. Microtidal flats are not scored as if they had the ocean range
 - **Habitat overlays** — oyster and seagrass polygons, labeled as hand-drawn approximations
+- **Wind Map** — optional hourly Open-Meteo wind field (speed color ramp, streaks, legend, hour slider) over Cocoa Beach and the lagoons
 - **Phone layout** — the map is the whole screen. Forecast and species open in a bottom sheet
 - **Spot drawer** — score breakdown, the scored window, and local tips
 - **No backend** — weather from [Open-Meteo](https://open-meteo.com) (precipitation in inches), tides from [NOAA CO-OPS](https://tidesandcurrents.noaa.gov)

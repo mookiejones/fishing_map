@@ -11,6 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 After making any code changes, always commit and push them to the remote without asking for confirmation first.
 
+## Grok
+
+Project skill: `.grok/skills/fishing-ship/SKILL.md`. From this repo, `/fishing-ship <issue-number>` lands one GitHub issue (code + PR, sync from main, QA as `mookiejones-qa`, squash-merge as `mookiejones`). Skip a stage that is already done. Stop on the first failure. This skill is repo-local; it does not apply outside `mookiejones/fishing_map`.
+
 ## Commands
 
 ```bash
@@ -22,7 +26,7 @@ npm run test     # Vitest in watch mode
 npm run test:run # Vitest single run (CI / pre-push)
 ```
 
-Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts` file per function. Run a single file: `npx vitest run tests/engine/scoreWind.test.ts`. Tests use jsdom environment (required because `config.ts` calls `localStorage` at import time).
+Test files live in `tests/` (mirroring the `src/` structure), with one `.test.ts` file per function. Run a single file: `npx vitest run tests/engine/scoreWind.test.ts`. Tests use jsdom environment. `config.ts` reads `localStorage` through a guarded helper so Node 25+ workers without Storage still load.
 
 ## Architecture
 
@@ -59,6 +63,7 @@ All components call `useAppContext()` directly — no prop drilling.
 | `src/data/overlays.ts` | Hand-drawn oyster and seagrass polygons. The UI labels them approximate |
 | `src/data/boatRamps.ts` | Public boat ramps. Bairs Cove is the Haulover ramp. Oars & Paddles is the launch beside Dragon Point |
 | `src/config.ts` | Maps key (`localStorage` `fishing_map_gkey` or `VITE_GOOGLE_MAPS_API_KEY`), map center, NOAA station, weather coords |
+| `src/wind/` | Hourly Open-Meteo wind lattice, raster, and particle advection for the Wind Map overlay |
 | `src/utils/conditionsForWindow.ts` | Builds `DayConditions` for a dawn or dusk window |
 | `src/time/forecastDates.ts` | Local `America/New_York` date keys. Do not use `toISOString()` for the fishing day |
 | `src/theme.ts` | MUI dark nautical theme + `SIDEBAR_WIDTH = 320` |
@@ -72,12 +77,14 @@ Species markers are small fish icons. Color is the rating. The species is the ic
 
 `src/components/FishingMap.tsx` imports:
 - `mapStyles.tsx` — dark nautical `MAP_STYLES` array
-- `HabitatOverlaysComponent.tsx` — imperative polygon lifecycle
+- `HabitatOverlaysComponent.tsx` — imperative polygon lifecycle (create on map-ready, toggle visibility)
+- `WindOverlayComponent.tsx` — mounts wind canvases via `attachWindOverlay`
+- `WindHud` — legend and hourly slider when Wind Map is on
 - `SetupBannerComponent.tsx` — shown when no valid API key
 
-`WindOverlayComponent.tsx` is the particle wind layer. Another branch owns that file. Do not restyle or rewrite it here. It receives the scored window's wind speed and direction through props.
+`src/vite-env.d.ts` references `@types/google.maps`. TypeScript 6 does not load that package unless a source file references it. MUI 9 system props (`alignItems`, `flexWrap`, Grid `item`) live in `sx` / `size` / `slotProps`.
 
-`src/vite-env.d.ts` references `@types/google.maps`. TypeScript 6 does not load that package unless a source file references it.
+`src/containers/FisingMapContainer.tsx` (note: typo in filename) is an alternate container wrapping `MapInner` + `SetupBanner`.
 
 ### GitHub Pages deployment
 
