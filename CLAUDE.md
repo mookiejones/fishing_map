@@ -63,7 +63,7 @@ All components call `useAppContext()` directly — no prop drilling.
 | `src/data/overlays.ts` | Hand-drawn oyster and seagrass polygons. The UI labels them approximate |
 | `src/data/boatRamps.ts` | Public boat ramps. Bairs Cove is the Haulover ramp. Oars & Paddles is the launch beside Dragon Point |
 | `src/config.ts` | Maps key (`localStorage` `fishing_map_gkey` or `VITE_GOOGLE_MAPS_API_KEY`), map center, NOAA station, weather coords |
-| `src/wind/` | Hourly Open-Meteo wind lattice, raster, and particle advection for the Wind Map overlay |
+| `src/wind/` | Hourly Open-Meteo wind lattice, raster, and particle advection for the Wind Map overlay. Particle screen speed tracks mph, not zoom (`visualHoursPerSecond`) |
 | `src/utils/conditionsForWindow.ts` | Builds `DayConditions` for a dawn or dusk window |
 | `src/time/forecastDates.ts` | Local `America/New_York` date keys. Do not use `toISOString()` for the fishing day |
 | `src/theme.ts` | MUI dark nautical theme + `SIDEBAR_WIDTH = 320` |

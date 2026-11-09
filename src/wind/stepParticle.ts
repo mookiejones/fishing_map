@@ -4,9 +4,9 @@ const MILES_PER_DEG_LAT = 69;
 const TRAIL_LIMIT = 28;
 
 /**
- * Advances a particle by `visualHours` of exaggerated travel.
- * Real wind would crawl a few pixels a minute; the exaggeration keeps
- * the flow readable. The trail stores geographic positions, not pixels.
+ * Advances a particle by `visualHours` of travel.
+ * `visualHoursPerSecond` picks that scale from the current zoom so a
+ * light breeze stays slow on screen. The trail stores geographic positions.
  */
 export default function stepParticle(
     particle: WindParticle,

@@ -3,10 +3,8 @@ import pickParticleCount from './pickParticleCount';
 import projectToCanvas from './projectToCanvas';
 import sampleWind from './sampleWind';
 import stepParticle from './stepParticle';
+import visualHoursPerSecond from './visualHoursPerSecond';
 import type { MapView, WindField, WindParticle } from './types';
-
-/** One real-time second stands in for this many hours of wind travel. */
-const VISUAL_HOURS_PER_SECOND = 0.2;
 const RASTER_ALPHA = 168;
 const TRAIL_BUCKETS = 5;
 
@@ -226,7 +224,7 @@ export default function attachWindOverlay(map: google.maps.Map): WindOverlayCont
         if (document.hidden || !view || !field) return;
         const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 0.016;
         lastFrame = now;
-        stepAll(dt * VISUAL_HOURS_PER_SECOND);
+        stepAll(dt * visualHoursPerSecond(view));
         drawParticles();
     }
 
