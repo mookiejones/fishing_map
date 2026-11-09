@@ -40,7 +40,7 @@ AppProvider (src/context/AppContext.tsx)
   ├── day cards use rateDay, the median of those same rateSpot scores
   └── exposes everything via useAppContext()
 
-On screens under 600px the forecast is a bottom sheet (MainContainer). Wider screens dock the sidebar.
+On screens under 600px the forecast is a bottom sheet (MainContainer). Wider screens dock the sidebar. The 7-day list scrolls in its own pane; dawn/dusk conditions stay pinned below it.
 
 App.tsx          — layout shell only; reads sidebarOpen from context
   ├── TopBar     — reads dataStatus

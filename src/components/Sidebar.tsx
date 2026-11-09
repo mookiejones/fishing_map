@@ -80,7 +80,7 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
         <Box sx={{
             width:       isSheet ? '100%' : (sidebarOpen ? SIDEBAR_WIDTH : 0),
             minWidth:    isSheet ? 0 : (sidebarOpen ? SIDEBAR_WIDTH : 0),
-            height:      isSheet ? '100%' : 'auto',
+            height:      '100%',
             minHeight:   0,
             flex:        isSheet ? 1 : 'none',
             overflow:    'hidden',
@@ -203,16 +203,15 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
 
                 <Divider />
 
-                {/* ── Day cards + conditions ────────────── */}
-                <Box sx={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                {/* Day cards scroll. Conditions stay pinned below so they never paint under the list. */}
+                <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     {weatherDays.length === 0 ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
                             <CircularProgress size={28} />
                         </Box>
                     ) : (
                         <>
-                            {/* ── 7-Day Forecast (collapsible) ── */}
-                            <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
+                            <Box sx={{ px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
                                 <Stack
                                     direction="row"
                                     onClick={() => setForecastOpen(o => !o)}
@@ -232,8 +231,8 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
                                     }
                                 </Stack>
                             </Box>
-                            <Collapse in={forecastOpen}>
-                                <Box sx={{ px: 1.5, pb: 1 }}>
+                            {forecastOpen && (
+                                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1.5, pb: 1 }}>
                                     <Stack spacing={0.75}>
                                         {weatherDays.map((day, i) => {
                                             const d          = new Date(day.date + 'T12:00:00');
@@ -283,13 +282,12 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
                                         })}
                                     </Stack>
                                 </Box>
-                            </Collapse>
+                            )}
 
                             {bite && selectedSummary && (
-                                <>
+                                <Box sx={{ flexShrink: 0, maxHeight: '50%', overflowY: 'auto' }}>
                                     <Divider />
 
-                                    {/* ── Conditions (collapsible) ── */}
                                     <Box sx={{ px: 1.5, pt: 1, pb: 0.5 }}>
                                         <Stack
                                             direction="row"
@@ -354,7 +352,7 @@ export default function Sidebar({ mode = 'dock' }: { mode?: 'dock' | 'sheet' }) 
                                             )}
                                         </Box>
                                     </Collapse>
-                                </>
+                                </Box>
                             )}
                         </>
                     )}
